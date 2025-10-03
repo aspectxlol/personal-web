@@ -1,8 +1,61 @@
+import { parseFile } from "@/lib/utils";
 import React from "react";
+import { metadata } from "./layout";
+import Link from "next/link";
 
-export default function Home() {
+type BlogPost = {
+  name: string;
+  metadata: {
+    title: string;
+    excerpt: string;
+    coverImage: string;
+  };
+};
+
+export default async function Home() {
+  const rawContents = await fetch(
+    "https://api.github.com/repos/aspectxlol/content-repo/contents/post",
+    { headers: { authorization: `Bearer ${process.env.GITHUB_ACCESS_TOKEN}` } }
+  ).then((res) => res.json());
+
+  const contents = rawContents
+    .filter((item: any) => item.name.endsWith(".md") || item.name.endsWith(".mdx"))
+    .map((item: any) => ({
+      name: item.name,
+      url: item._links.self,
+    }));
+
+  let parsedContent: BlogPost[] = [];
+
+  for (const item of contents) {
+    const fileData = await fetch(item.url, { headers: { authorization: `Bearer ${process.env.GITHUB_ACCESS_TOKEN}` } })
+      .then((res) => res.json())
+      .catch((err) => console.log(err));
+
+    const decodedContent = atob(fileData.content);
+    const parsedFile = await parseFile(decodedContent);
+    console.log(parsedFile.data);
+    parsedContent.push({
+      name: item.name,
+      metadata: parsedFile.data.frontmatter as BlogPost["metadata"],
+    });
+  }
+
   return (
     <main className="snap-y snap-mandatory h-screen overflow-y-scroll">
+      <div className="fixed top-0 left-0 w-full bg-background text-white p-4 z-10">
+        <nav className="flex justify-center space-x-8">
+          <a href="#hero" className="hover:underline">
+            Home
+          </a>
+          <a href="#work" className="hover:underline">
+            Blog & Projects
+          </a>
+          <a href="#contact" className="hover:underline">
+            Contact
+          </a>
+        </nav>
+      </div>
       {/* Section 1: Hero */}
       <section
         className="h-screen flex flex-col justify-center bg-background text-white snap-start p-52"
@@ -19,27 +72,40 @@ export default function Home() {
         className="h-screen flex flex-col justify-center items-center bg-background snap-start"
         id="work"
       >
-        <div className="max-w-3xl w-full px-6">
+        <div className="max-w-5xl w-full px-6">
           <h2 className="text-4xl font-bold mb-8 text-center">
-            Blog Posts & Projects
+            Blog Posts
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Blog Posts */}
             <div>
-              <h3 className="text-2xl font-semibold mb-4">Blog Posts</h3>
-              <ul className="space-y-2">
-                <li className="bg-white p-4 rounded shadow">
-                  <span className="font-bold">Coming soon!</span>
-                </li>
-              </ul>
-            </div>
-            {/* Projects */}
-            <div>
-              <h3 className="text-2xl font-semibold mb-4">Projects</h3>
-              <ul className="space-y-2">
-                <li className="bg-white p-4 rounded shadow">
-                  <span className="font-bold">Coming soon!</span>
-                </li>
+              <ul className="space-y-6">
+                {parsedContent.length === 0 ? (
+                  <li className="bg-white p-4 rounded shadow">
+                    <span className="font-bold">Coming soon!</span>
+                  </li>
+                ) : (
+                  parsedContent.map((post) => (
+                    <Link href={`/blog/${post.name.replace(/\.mdx?$/, "")}`} key={post.name}>
+                      <li
+                        key={post.name}
+                        className="bg-white rounded-lg shadow flex flex-col md:flex-row overflow-hidden text-black"
+                      >
+                        <img
+                          src={'https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/post' + post.metadata.coverImage}
+                          alt={post.metadata.title}
+                          className="w-full md:w-48 h-48 object-cover"
+                        />
+                        <div className="flex-1 p-6 flex flex-col justify-between">
+                          <div>
+                            <h4 className="text-xl font-bold mb-2">{post.metadata.title}</h4>
+                            <p className="text-gray-700 mb-4">{post.metadata.excerpt}</p>
+                          </div>
+                        </div>
+                      </li>
+                    </Link>
+                  ))
+                )}
               </ul>
             </div>
           </div>
