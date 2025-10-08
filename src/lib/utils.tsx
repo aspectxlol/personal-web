@@ -57,7 +57,7 @@ export async function parseFileToReact(file: string) {
   }
 }
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 function CustomImage({ src, alt, ...props }: ImgHTMLAttributes<HTMLImageElement>) {
   if (!(typeof src === 'string')) return null
   // Check if src is relative (doesn't start with http:// or https:// or /)

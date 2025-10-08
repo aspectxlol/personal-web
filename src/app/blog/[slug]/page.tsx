@@ -12,6 +12,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   ).then((res) => res.json());
 
   // Find file by stripping extension and matching slug
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fileItem = rawContents.find((item: any) => {
     const nameWithoutExt = item.name.replace(/\.(mdx?|md)$/, '');
     return nameWithoutExt === slug;
