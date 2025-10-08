@@ -19,7 +19,9 @@ export default async function Home() {
   ).then((res) => res.json());
 
   const contents = rawContents
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((item: any) => item.name.endsWith(".md") || item.name.endsWith(".mdx"))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((item: any) => ({
       name: item.name,
       url: item._links.self,

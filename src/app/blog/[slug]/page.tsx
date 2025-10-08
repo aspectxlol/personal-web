@@ -1,6 +1,5 @@
 import GiscusComponent from "@/components/Giscus";
 import { parseFileToReact } from "@/lib/utils";
-import Giscus from "@giscus/react";
 import Image from "next/image";
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
