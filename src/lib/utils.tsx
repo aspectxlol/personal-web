@@ -10,6 +10,7 @@ import remarkParseFrontmatter from "remark-parse-frontmatter"
 import type { AnchorHTMLAttributes, ClassAttributes, HTMLAttributes, ImgHTMLAttributes, JSX } from "react"
 import * as prod from "react/jsx-runtime"
 import Image from "next/image"
+import rehypeShiki from '@shikijs/rehype'
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
@@ -31,6 +32,9 @@ export async function parseFileToReact(file: string) {
     .use(remarkFrontmatter)
     .use(remarkParseFrontmatter)
     .use(remarkRehype) // Convert markdown AST to HTML AST
+    .use(rehypeShiki, {
+      theme: 'one-dark-pro' // or 'github-dark', 'dracula', etc.
+    })
     .use(rehypeReact, {
       Fragment: prod.Fragment,
       jsx: prod.jsx,
@@ -40,7 +44,7 @@ export async function parseFileToReact(file: string) {
         h2: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLHeadingElement> & HTMLAttributes<HTMLHeadingElement>) => <h2 className={cn("text-3xl font-semibold")} {...props} />,
         p: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLParagraphElement> & HTMLAttributes<HTMLParagraphElement>) => <p className={cn("my-4 leading-relaxed")} {...props} />,
         a: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLAnchorElement> & AnchorHTMLAttributes<HTMLAnchorElement>) => <a className={cn("text-blue-600 hover:underline")} {...props} />,
-        code: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement>) => <code className={cn("font-mono")} {...props} />,
+        code: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement>) => <code className={cn("font-mono p-1 py-2")} {...props} />,
         img: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLImageElement> & HTMLAttributes<HTMLImageElement>) => <CustomImage {...props} />,
       }
     })
