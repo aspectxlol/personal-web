@@ -28,7 +28,6 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     coverImage: string;
     date: string;
   };
-  console.log(content);
 
   return (
     <div className="min-h-screen bg-gray-50 text-black">
