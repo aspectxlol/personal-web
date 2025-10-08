@@ -1,6 +1,5 @@
 import { parseFile } from "@/lib/utils";
 import React from "react";
-import { metadata } from "./layout";
 import Link from "next/link";
 import Image from "next/image";
 

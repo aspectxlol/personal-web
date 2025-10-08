@@ -1,6 +1,5 @@
-import { parseFile, parseFileToReact } from "@/lib/utils";
+import { parseFileToReact } from "@/lib/utils";
 import Image from "next/image";
-import { ImgHTMLAttributes } from "react";
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   // Await params before accessing its properties
@@ -28,6 +27,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     coverImage: string;
     date: string;
   };
+
+  console.log(metadata.coverImage);
 
   return (
     <div className="min-h-screen bg-gray-50 text-black">

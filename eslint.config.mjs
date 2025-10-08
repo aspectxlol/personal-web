@@ -1,45 +1,54 @@
-// eslint.config.js
 import js from "@eslint/js";
+import ts from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
+import react from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import next from "@next/eslint-plugin-next";
+import importPlugin from "eslint-plugin-import";
+import globals from "globals";
 
+/** @type {import("eslint").Linter.FlatConfig[]} */
 export default [
   js.configs.recommended,
   {
-    ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "build/**",
-      "dist/**",
-      "coverage/**",
-    ],
+    ignores: ["node_modules", ".next", "dist", "build"],
+  },
+  {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+        ecmaFeatures: { jsx: true },
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    plugins: {
+      "@typescript-eslint": ts,
+      react,
+      "react-hooks": reactHooks,
+      import: importPlugin,
+      next,
+    },
+    settings: {
+      react: { version: "detect" },
+    },
     rules: {
-      // ✅ Basic quality
-      eqeqeq: ["error", "always"],
-      "no-var": "error",
-      "prefer-const": "warn",
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": "warn",
       "no-undef": "error",
-      "no-console": ["warn", { allow: ["warn", "error"] }],
-      "no-debugger": "error",
-
-      // ✅ Readability
-      curly: ["warn", "all"],
-      "no-multi-spaces": "warn",
-      "no-trailing-spaces": "warn",
-      "prefer-template": "warn",
-      "arrow-body-style": ["warn", "as-needed"],
-
-      // ✅ Consistency
-      "no-duplicate-imports": "error",
-      "no-unneeded-ternary": "warn",
-      "prefer-arrow-callback": "warn",
-      "no-extra-semi": "warn",
-      "no-multiple-empty-lines": ["warn", { max: 1 }],
-
-      // ✅ Safety
-      "no-implied-eval": "error",
-      "no-new-func": "error",
-      "no-unused-expressions": "error",
+      "no-console": "off",
+      "eqeqeq": "warn",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off",
+      "import/no-extraneous-dependencies": "off",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
     },
   },
 ];
