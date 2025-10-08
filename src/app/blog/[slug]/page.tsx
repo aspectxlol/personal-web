@@ -1,6 +1,101 @@
 import GiscusComponent from "@/components/Giscus";
 import { parseFileToReact } from "@/lib/utils";
+import { Metadata } from "next";
 import Image from "next/image";
+
+type Props = {
+  params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+
+  try {
+    const rawContents = await fetch(
+      "https://api.github.com/repos/aspectxlol/content-repo/contents/post",
+      {
+        headers: { authorization: `Bearer ${process.env.GITHUB_ACCESS_TOKEN}` },
+        cache: 'no-store'
+      }
+    ).then((res) => res.json());
+
+    // Find the file
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fileItem = rawContents.find((item: any) => {
+      const nameWithoutExt = item.name.replace(/\.(mdx?|md)$/, '');
+      return nameWithoutExt === slug;
+    });
+
+    if (!fileItem) {
+      return {
+        title: 'Post Not Found',
+      };
+    }
+
+    // Fetch and decode content
+    const rawRawContents = atob(
+      (await fetch(fileItem._links?.self, {
+        headers: { authorization: `Bearer ${process.env.GITHUB_ACCESS_TOKEN}` },
+        cache: 'no-store'
+      })
+        .then((res) => res.json())
+        .catch((err) => console.error(err))).content
+    );
+
+    const { frontmatter } = await parseFileToReact(rawRawContents);
+    const metadata = frontmatter as {
+      title: string;
+      excerpt: string;
+      coverImage: string;
+      date: string;
+    };
+
+    const imageUrl = 'https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/post' + metadata.coverImage;
+
+    return {
+      title: metadata.title,
+      description: metadata.excerpt,
+
+      openGraph: {
+        title: metadata.title,
+        description: metadata.excerpt,
+        type: 'article',
+        publishedTime: metadata.date,
+        authors: ['Louie Hansen'],
+        images: [
+          {
+            url: imageUrl,
+            width: 1200,
+            height: 630,
+            alt: metadata.title,
+          }
+        ],
+      },
+
+      twitter: {
+        card: 'summary_large_image',
+        title: metadata.title,
+        description: metadata.excerpt,
+        images: [imageUrl],
+        creator: '@yourtwitter', // Replace with your handle
+      },
+
+      authors: [{ name: 'Louie Hansen' }],
+
+      // Optional: JSON-LD structured data for better SEO
+      other: {
+        'article:published_time': metadata.date,
+        'article:author': 'Louie Hansen',
+      }
+    };
+  } catch (error) {
+    console.error('Error generating metadata:', error);
+    return {
+      title: 'Blog Post',
+    };
+  }
+}
+
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   // Await params before accessing its properties
@@ -104,3 +199,4 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     </>
   );
 }
+
