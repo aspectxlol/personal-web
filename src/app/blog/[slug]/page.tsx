@@ -1,4 +1,6 @@
+import GiscusComponent from "@/components/Giscus";
 import { parseFileToReact } from "@/lib/utils";
+import Giscus from "@giscus/react";
 import Image from "next/image";
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
@@ -94,6 +96,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             {content}
           </div>
         </article>
+
+        <div className="max-w-4xl mx-auto px-6 py-16">
+          <GiscusComponent />
+        </div>
       </div>
     </>
   );
