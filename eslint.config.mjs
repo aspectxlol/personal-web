@@ -1,25 +1,45 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+// eslint.config.js
+import js from "@eslint/js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+export default [
+  js.configs.recommended,
   {
     ignores: [
       "node_modules/**",
       ".next/**",
       "out/**",
       "build/**",
-      "next-env.d.ts",
+      "dist/**",
+      "coverage/**",
     ],
+    rules: {
+      // ✅ Basic quality
+      eqeqeq: ["error", "always"],
+      "no-var": "error",
+      "prefer-const": "warn",
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "no-undef": "error",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-debugger": "error",
+
+      // ✅ Readability
+      curly: ["warn", "all"],
+      "no-multi-spaces": "warn",
+      "no-trailing-spaces": "warn",
+      "prefer-template": "warn",
+      "arrow-body-style": ["warn", "as-needed"],
+
+      // ✅ Consistency
+      "no-duplicate-imports": "error",
+      "no-unneeded-ternary": "warn",
+      "prefer-arrow-callback": "warn",
+      "no-extra-semi": "warn",
+      "no-multiple-empty-lines": ["warn", { max: 1 }],
+
+      // ✅ Safety
+      "no-implied-eval": "error",
+      "no-new-func": "error",
+      "no-unused-expressions": "error",
+    },
   },
 ];
-
-export default eslintConfig;

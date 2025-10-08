@@ -2,6 +2,7 @@ import { parseFile } from "@/lib/utils";
 import React from "react";
 import { metadata } from "./layout";
 import Link from "next/link";
+import Image from "next/image";
 
 type BlogPost = {
   name: string;
@@ -34,7 +35,6 @@ export default async function Home() {
 
     const decodedContent = atob(fileData.content);
     const parsedFile = await parseFile(decodedContent);
-    console.log(parsedFile.data);
     parsedContent.push({
       name: item.name,
       metadata: parsedFile.data.frontmatter as BlogPost["metadata"],
@@ -58,12 +58,19 @@ export default async function Home() {
       </div>
       {/* Section 1: Hero */}
       <section
-        className="h-screen flex flex-col justify-center bg-background text-white snap-start p-52"
+        className="h-screen flex flex-col justify-center bg-background text-white snap-start px-8 md:px-20 lg:px-52"
         id="hero"
       >
         <div>
-          <h1 className="text-9xl font-bold mb-4">Hi, I am Louie Hansen</h1>
-          <p className="text-6xl font-medium">Student, Developer, Creator</p>
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-bold mb-4 leading-tight">
+            Hi, I am <br></br>
+            <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 text-transparent bg-clip-text">
+              Louie Hansen
+            </span>
+          </h1>
+          <p className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-medium">
+            Student, Developer, Creator
+          </p>
         </div>
       </section>
 
@@ -91,7 +98,7 @@ export default async function Home() {
                         key={post.name}
                         className="bg-white rounded-lg shadow flex flex-col md:flex-row overflow-hidden text-black"
                       >
-                        <img
+                        <Image
                           src={'https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/post' + post.metadata.coverImage}
                           alt={post.metadata.title}
                           className="w-full md:w-48 h-48 object-cover"
