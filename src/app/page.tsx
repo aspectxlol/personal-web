@@ -30,7 +30,7 @@ export default async function Home() {
   for (const item of contents) {
     const fileData = await fetch(item.url, { headers: { authorization: `Bearer ${process.env.GITHUB_ACCESS_TOKEN}` } })
       .then((res) => res.json())
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
 
     const decodedContent = atob(fileData.content);
     const parsedFile = await parseFile(decodedContent);
@@ -100,6 +100,8 @@ export default async function Home() {
                         <Image
                           src={'https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/post' + post.metadata.coverImage}
                           alt={post.metadata.title}
+                          width={1920}
+                          height={1080}
                           className="w-full md:w-48 h-48 object-cover"
                         />
                         <div className="flex-1 p-6 flex flex-col justify-between">

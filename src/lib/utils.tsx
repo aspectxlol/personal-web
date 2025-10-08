@@ -40,7 +40,7 @@ export async function parseFileToReact(file: string) {
         h2: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLHeadingElement> & HTMLAttributes<HTMLHeadingElement>) => <h2 className={cn("text-3xl font-semibold")} {...props} />,
         p: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLParagraphElement> & HTMLAttributes<HTMLParagraphElement>) => <p className={cn("my-4 leading-relaxed")} {...props} />,
         a: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLAnchorElement> & AnchorHTMLAttributes<HTMLAnchorElement>) => <a className={cn("text-blue-600 hover:underline")} {...props} />,
-        code: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement>) => <code className={cn("bg-gray-100 rounded px-1")} {...props} />,
+        code: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement>) => <code className={cn("font-mono")} {...props} />,
         img: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLImageElement> & HTMLAttributes<HTMLImageElement>) => <CustomImage {...props} />,
       }
     })

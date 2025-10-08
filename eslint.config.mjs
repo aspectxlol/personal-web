@@ -40,7 +40,7 @@ export default [
     rules: {
       "no-unused-vars": "warn",
       "no-undef": "error",
-      "no-console": "off",
+      "no-console": ["error", { allow: ["warn", "error", "info"] }],
       "eqeqeq": "warn",
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
