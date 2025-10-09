@@ -12,6 +12,9 @@ type BlogPost = {
   };
 };
 
+export const dynamic = 'force-static';
+export const revalidate = false; // Never auto-revalidate
+
 export default async function Home() {
   const rawContents = await fetch(
     "https://api.github.com/repos/aspectxlol/content-repo/contents/post",
@@ -43,7 +46,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="snap-y snap-mandatory h-screen overflow-y-scroll">
+    <main className="snap-y snap-mandatory h-screen overflow-y-scroll scroll-smooth snap-always hide-scrollbar">
       <div className="fixed top-0 left-0 w-full bg-background text-white p-4 z-10">
         <nav className="flex justify-center space-x-8">
           <a href="#hero" className="hover:underline">
@@ -105,6 +108,9 @@ export default async function Home() {
                           width={1920}
                           height={1080}
                           className="w-full md:w-48 h-48 object-cover"
+                          lazyBoundary="500px"
+                          priority
+                          quality={75}
                         />
                         <div className="flex-1 p-6 flex flex-col justify-between">
                           <div>
