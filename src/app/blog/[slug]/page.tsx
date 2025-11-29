@@ -170,6 +170,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                   width={1920}
                   height={1080}
                   className="w-full h-auto"
+                  priority
+                  quality={75}
                 />
               </div>
             </div>
