@@ -73,3 +73,47 @@ function CustomImage({ src, alt, ...props }: ImgHTMLAttributes<HTMLImageElement>
   // Option 2: Using Next.js Image (recommended for Next.js)
   // return <Image src={fullSrc} alt={alt || ''} width={800} height={600} {...props} />
 }
+
+export async function QparseFileToReact(file: string) {
+  const result = await remark()
+    .use(remarkParse)
+    .use(remarkRehype) // Convert markdown AST to HTML AST
+    .use(rehypeShiki, {
+      theme: 'one-dark-pro' // or 'github-dark', 'dracula', etc.
+    })
+    .use(rehypeReact, {
+      Fragment: prod.Fragment,
+      jsx: prod.jsx,
+      jsxs: prod.jsxs,
+      components: {
+        h1: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLHeadingElement> & HTMLAttributes<HTMLHeadingElement>) => <h1 className={cn("text-4xl font-bold")} {...props} />,
+        h2: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLHeadingElement> & HTMLAttributes<HTMLHeadingElement>) => <h2 className={cn("text-3xl font-semibold")} {...props} />,
+        p: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLParagraphElement> & HTMLAttributes<HTMLParagraphElement>) => <p className={cn("my-4 leading-relaxed")} {...props} />,
+        a: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLAnchorElement> & AnchorHTMLAttributes<HTMLAnchorElement>) => <a className={cn("text-blue-600 hover:underline")} {...props} />,
+        code: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement>) => <code className={cn("font-mono p-1 py-2")} {...props} />,
+        img: (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLImageElement> & HTMLAttributes<HTMLImageElement>) => <QCustomImage {...props} />,
+      }
+    })
+    .process(file)
+
+  return {
+    content: result.result, // This is your React element
+  }
+}
+
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+function QCustomImage({ src, alt, ...props }: ImgHTMLAttributes<HTMLImageElement>) {
+  if (!(typeof src === 'string')) return null
+  // Check if src is relative (doesn't start with http:// or https:// or /)
+  const BASE_URL = 'https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/quiz'
+  const isRelative = src && !src.startsWith('http') && !src.startsWith('//')
+  const fullSrc = isRelative ? `${BASE_URL}/${src}` : src
+
+  // Option 1: Using standard img tag
+  return <>
+    <Image src={fullSrc} alt={alt || ''} width={270} height={480} />
+  </>
+
+  // Option 2: Using Next.js Image (recommended for Next.js)
+  // return <Image src={fullSrc} alt={alt || ''} width={800} height={600} {...props} />
+}
