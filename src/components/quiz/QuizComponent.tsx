@@ -1,16 +1,12 @@
 import { Quiz } from "@/index";
-import QuestionSlide from "./QuestionSlide";
+import QuizSlideshow from "./QuizSlideshow";
 
-export default function QuizComponent({ QuizData }: { QuizData: Quiz }) {
+export default async function QuizComponent({ QuizData }: { QuizData: Quiz }) {
+  if (!QuizData) {
+    return <main>Loading...</main>;
+  }
 
-  return (
-    <main>
-      <h1>{QuizData.title}</h1>
-      <p>{QuizData.description}</p>
-
-      <div>
-        {QuizData.questions.map((question, index) => <QuestionSlide key={index} Question={question} />)}
-      </div>
-    </main>
-  )
+  return <main className="h-full">
+    <QuizSlideshow QuizData={QuizData} />
+  </main>
 }

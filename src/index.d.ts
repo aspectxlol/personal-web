@@ -13,6 +13,7 @@ interface Quiz {
 
 interface Questions {
   content: string;
+  attachment?: string;
   options: Options[];
 }
 

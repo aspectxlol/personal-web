@@ -78,9 +78,6 @@ export async function QparseFileToReact(file: string) {
   const result = await remark()
     .use(remarkParse)
     .use(remarkRehype) // Convert markdown AST to HTML AST
-    .use(rehypeShiki, {
-      theme: 'one-dark-pro' // or 'github-dark', 'dracula', etc.
-    })
     .use(rehypeReact, {
       Fragment: prod.Fragment,
       jsx: prod.jsx,
@@ -102,18 +99,27 @@ export async function QparseFileToReact(file: string) {
 }
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-function QCustomImage({ src, alt, ...props }: ImgHTMLAttributes<HTMLImageElement>) {
+export function QCustomImage({ src, alt, ...props }: ImgHTMLAttributes<HTMLImageElement>) {
   if (!(typeof src === 'string')) return null
   // Check if src is relative (doesn't start with http:// or https:// or /)
   const BASE_URL = 'https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/quiz'
   const isRelative = src && !src.startsWith('http') && !src.startsWith('//')
   const fullSrc = isRelative ? `${BASE_URL}/${src}` : src
 
-  // Option 1: Using standard img tag
-  return <>
-    <Image src={fullSrc} alt={alt || ''} width={270} height={480} />
-  </>
-
-  // Option 2: Using Next.js Image (recommended for Next.js)
-  // return <Image src={fullSrc} alt={alt || ''} width={800} height={600} {...props} />
+  return (
+    <div className="relative w-full max-w-xs h-96 rounded-3xl overflow-hidden">
+      <Image
+        src={fullSrc}
+        alt={alt || ''}
+        width={270}
+        height={480}
+        className="rounded-3xl object-cover w-full h-full"
+        onLoadingComplete={(result) => {
+          if (result.naturalWidth === 0) {
+            // Error loading
+          }
+        }}
+      />
+    </div>
+  )
 }
