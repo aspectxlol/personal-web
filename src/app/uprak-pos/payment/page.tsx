@@ -1,12 +1,12 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { QrCode, CheckCircle, Clock } from 'lucide-react';
 
 type PaymentStatus = 'pending' | 'processing' | 'success';
 
-export default function PaymentPage() {
+function PaymentContent() {
   const searchParams = useSearchParams();
   const amount = searchParams.get('amount') || '0';
   const [status, setStatus] = useState<PaymentStatus>('pending');
@@ -42,7 +42,7 @@ export default function PaymentPage() {
   }).format(Number(amount));
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Card Container */}
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
@@ -222,6 +222,37 @@ export default function PaymentPage() {
           <p>🔒 Transaksi dijamin aman dengan teknologi keamanan terkini</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+      <Suspense
+        fallback={
+          <div className="w-full max-w-md">
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+              <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-green-600 font-bold text-lg">G</span>
+                  </div>
+                  <span className="text-2xl font-bold">GoPay</span>
+                </div>
+                <p className="text-green-100 text-sm">UPRAK POS Payment</p>
+              </div>
+              <div className="p-8">
+                <div className="text-center">
+                  <p className="text-gray-600 animate-pulse">Memuat...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      >
+        <PaymentContent />
+      </Suspense>
     </main>
   );
 }
