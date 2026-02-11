@@ -82,11 +82,11 @@ function PaymentContent() {
                   <div className="space-y-6">
                     {/* Customer Info */}
                     <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                        <span className="text-white font-bold text-lg">
-                          {paymentData.customerName.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
+                      <img
+                        src={`https://api.dicebear.com/7.x/fun-emoji/svg?seed=${encodeURIComponent(paymentData.customerName)}`}
+                        alt={paymentData.customerName}
+                        className="w-12 h-12 rounded-full flex-shrink-0"
+                      />
                       <div className="flex-1">
                         <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Dari</p>
                         <p className="text-sm font-semibold text-gray-900">
@@ -100,8 +100,10 @@ function PaymentContent() {
 
                     {/* Merchant Info */}
                     <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                        <span className="text-white font-bold text-lg">U</span>
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-bold text-sm">
+                          {paymentData.merchantName.substring(0, 2).toUpperCase()}
+                        </span>
                       </div>
                       <div className="flex-1">
                         <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Ke</p>
