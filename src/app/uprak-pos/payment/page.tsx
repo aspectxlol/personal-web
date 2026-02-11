@@ -3,23 +3,27 @@
 import { useSearchParams } from 'next/navigation';
 import React, { useState, useEffect, Suspense } from 'react';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 
 type PaymentStatus = 'pending' | 'processing' | 'success';
 
 interface PaymentData {
-  merchantName: string;
-  customerName: string;
+  merchantName?: string;
+  customerName?: string;
   price: string;
 }
 
 function PaymentContent() {
   const searchParams = useSearchParams();
   const dataParam = searchParams.get('data');
+  const amountParam = searchParams.get('amount');
+  const customerParam = searchParams.get('customer');
+  const merchantParam = searchParams.get('merchant');
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
   const [decodeError, setDecodeError] = useState(false);
   const [status, setStatus] = useState<PaymentStatus>('pending');
 
-  // Decode base64 data
+  // Decode base64 data or use query params
   useEffect(() => {
     if (dataParam) {
       try {
@@ -30,8 +34,15 @@ function PaymentContent() {
         console.error('Failed to decode payment data:', error);
         setDecodeError(true);
       }
+    } else if (amountParam) {
+      // Use individual query parameters
+      setPaymentData({
+        price: amountParam,
+        customerName: customerParam || undefined,
+        merchantName: merchantParam || undefined,
+      });
     }
-  }, [dataParam]);
+  }, [dataParam, amountParam, customerParam, merchantParam]);
 
   const handlePayment = () => {
     setStatus('processing');
@@ -81,37 +92,43 @@ function PaymentContent() {
                 <div className="border-b border-gray-200 p-6 pb-4">
                   <div className="space-y-6">
                     {/* Customer Info */}
-                    <div className="flex items-start gap-3">
-                      <img
-                        src={`https://api.dicebear.com/7.x/fun-emoji/svg?seed=${encodeURIComponent(paymentData.customerName)}`}
-                        alt={paymentData.customerName}
-                        className="w-12 h-12 rounded-full flex-shrink-0"
-                      />
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Dari</p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {paymentData.customerName}
-                        </p>
-                      </div>
-                    </div>
+                    {paymentData.customerName && (
+                      <>
+                        <div className="flex items-start gap-3">
+                          <Image
+                            src={`https://api.dicebear.com/7.x/fun-emoji/svg?seed=${encodeURIComponent(paymentData.customerName)}`}
+                            alt={paymentData.customerName}
+                            className="w-12 h-12 rounded-full flex-shrink-0"
+                          />
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Dari</p>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {paymentData.customerName}
+                            </p>
+                          </div>
+                        </div>
 
-                    {/* Arrow */}
-                    <div className="flex justify-center text-gray-400 text-xl">↓</div>
+                        {/* Arrow */}
+                        <div className="flex justify-center text-gray-400 text-xl">↓</div>
+                      </>
+                    )}
 
                     {/* Merchant Info */}
-                    <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-bold text-sm">
-                          {paymentData.merchantName.substring(0, 2).toUpperCase()}
-                        </span>
+                    {paymentData.merchantName && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-bold text-sm">
+                            {paymentData.merchantName.substring(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Ke</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {paymentData.merchantName}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Ke</p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {paymentData.merchantName}
-                        </p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
@@ -198,11 +215,13 @@ function PaymentContent() {
 
                 {/* Receipt Info */}
                 <div className="p-6 space-y-4 border-b border-gray-200">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Merchant</p>
-                    <p className="font-semibold text-gray-900">{paymentData.merchantName}</p>
-                  </div>
-                  <div className="border-t border-gray-200 pt-4">
+                  {paymentData.merchantName && (
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Merchant</p>
+                      <p className="font-semibold text-gray-900">{paymentData.merchantName}</p>
+                    </div>
+                  )}
+                  <div className={paymentData.merchantName ? "border-t border-gray-200 pt-4" : ""}>
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Jumlah</p>
                     <p className="text-2xl font-bold text-green-600">{formattedAmount}</p>
                   </div>
