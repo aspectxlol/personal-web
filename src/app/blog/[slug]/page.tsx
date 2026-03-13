@@ -2,7 +2,6 @@ import GiscusComponent from "@/components/Giscus";
 import { parseFileToReact } from "@/lib/utils";
 import { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
 type Props = {
@@ -142,17 +141,6 @@ export default async function Page({
 
       <div className="min-h-screen bg-[#080b11] text-slate-100 font-mono antialiased">
         <Navbar />
-
-        {/* Back link */}
-        <div className="max-w-[860px] mx-auto px-6 pt-10">
-          <Link
-            href="/#writing"
-            className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-cyan-400 transition-colors tracking-widest uppercase"
-          >
-            <span className="text-base leading-none">←</span>
-            <span>Back to writing</span>
-          </Link>
-        </div>
 
         {/* Post header */}
         <header className="max-w-[860px] mx-auto px-6 pt-10 pb-12">
