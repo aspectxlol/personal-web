@@ -209,30 +209,135 @@ export default async function Page({
 
         {/* Post content */}
         <article className="max-w-[860px] mx-auto px-6 pb-20">
-          <div
-            className="
-              prose prose-invert max-w-none
-              prose-headings:font-bold prose-headings:text-slate-100 prose-headings:tracking-tight prose-headings:font-mono
-              prose-h1:text-2xl prose-h2:text-xl prose-h2:border-b prose-h2:border-[#1a2540] prose-h2:pb-2
-              prose-h3:text-lg prose-h3:text-slate-200
-              prose-p:text-slate-400 prose-p:leading-[1.85] prose-p:font-mono
-              prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline prose-a:font-mono
-              prose-strong:text-slate-200 prose-strong:font-semibold
-              prose-code:text-cyan-400 prose-code:bg-[#0f1623] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:border prose-code:border-[#1a2540]
-              prose-pre:bg-[#0f1623] prose-pre:border prose-pre:border-[#1a2540] prose-pre:rounded-xl prose-pre:shadow-none
-              prose-pre:code:bg-transparent prose-pre:code:border-none prose-pre:code:p-0
-              prose-img:rounded-xl prose-img:border prose-img:border-[#1a2540]
-              prose-blockquote:border-l-cyan-400 prose-blockquote:border-l-2 prose-blockquote:pl-5 prose-blockquote:text-slate-500 prose-blockquote:not-italic prose-blockquote:font-mono
-              prose-ul:text-slate-400 prose-ol:text-slate-400
-              prose-li:marker:text-cyan-400
-              prose-hr:border-[#1a2540]
-              prose-table:border-collapse
-              prose-th:border prose-th:border-[#1a2540] prose-th:px-4 prose-th:py-2 prose-th:text-slate-300 prose-th:bg-[#0f1623] prose-th:text-xs prose-th:tracking-widest prose-th:uppercase
-              prose-td:border prose-td:border-[#1a2540] prose-td:px-4 prose-td:py-2 prose-td:text-slate-400 prose-td:text-sm
-            "
-          >
-            {content}
-          </div>
+          <style>{`
+            .post-content {
+              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+              font-size: 0.9rem;
+              color: #94a3b8;
+              line-height: 1.9;
+            }
+
+            /* Headings */
+            .post-content h1,
+            .post-content h2,
+            .post-content h3,
+            .post-content h4 {
+              color: #f1f5f9;
+              font-weight: 700;
+              letter-spacing: -0.02em;
+              margin-top: 2.75rem;
+              margin-bottom: 1rem;
+              line-height: 1.3;
+            }
+            .post-content h1 { font-size: 1.75rem; }
+            .post-content h2 {
+              font-size: 1.2rem;
+              padding-bottom: 0.6rem;
+              border-bottom: 1px solid #1a2540;
+            }
+            .post-content h3 { font-size: 1.05rem; color: #cbd5e1; }
+
+            /* Paragraphs */
+            .post-content p { margin-bottom: 1.4rem; }
+
+            /* Lists -- the key fix */
+            .post-content ul,
+            .post-content ol {
+              margin: 0.75rem 0 1.5rem 0;
+              padding-left: 1.75rem;
+              color: #94a3b8;
+            }
+            .post-content ul { list-style-type: disc; }
+            .post-content ol { list-style-type: decimal; }
+            .post-content li {
+              margin-bottom: 0.45rem;
+              padding-left: 0.25rem;
+              list-style: inherit;
+            }
+            .post-content li::marker { color: #22d3ee; }
+            .post-content li strong { color: #e2e8f0; }
+
+            /* Inline code */
+            .post-content :not(pre) > code {
+              color: #22d3ee;
+              background: #0f1623;
+              border: 1px solid #1a2540;
+              padding: 0.15em 0.45em;
+              border-radius: 4px;
+              font-size: 0.8rem;
+            }
+
+            /* Code blocks */
+            .post-content pre {
+              background: #0a0e18 !important;
+              border: 1px solid #1a2540;
+              border-radius: 10px;
+              padding: 1.25rem 1.5rem;
+              overflow-x: auto;
+              margin: 1.75rem 0;
+              font-size: 0.8rem;
+              line-height: 1.75;
+            }
+            .post-content pre code {
+              background: transparent !important;
+              border: none !important;
+              padding: 0 !important;
+              font-size: inherit;
+              color: inherit;
+            }
+
+            /* Blockquote */
+            .post-content blockquote {
+              border-left: 2px solid #22d3ee;
+              padding: 0.25rem 0 0.25rem 1.25rem;
+              margin: 1.75rem 0;
+              color: #64748b;
+            }
+
+            /* Links */
+            .post-content a { color: #22d3ee; text-decoration: none; }
+            .post-content a:hover { text-decoration: underline; }
+
+            /* Strong / em */
+            .post-content strong { color: #e2e8f0; font-weight: 600; }
+            .post-content em { color: #94a3b8; }
+
+            /* HR */
+            .post-content hr { border-color: #1a2540; margin: 2.5rem 0; border-top-width: 1px; }
+
+            /* Images */
+            .post-content img {
+              border-radius: 10px;
+              border: 1px solid #1a2540;
+              max-width: 100%;
+              margin: 1.5rem 0;
+            }
+
+            /* Tables */
+            .post-content table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 1.75rem 0;
+              font-size: 0.82rem;
+            }
+            .post-content th {
+              border: 1px solid #1a2540;
+              padding: 0.55rem 1rem;
+              background: #0f1623;
+              color: #cbd5e1;
+              text-align: left;
+              font-size: 0.68rem;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+            }
+            .post-content td {
+              border: 1px solid #1a2540;
+              padding: 0.55rem 1rem;
+              color: #94a3b8;
+            }
+            .post-content tr:hover td { background: #0f1623; }
+          `}</style>
+          <div className="post-content">{content}</div>
         </article>
 
         {/* Tags footer */}
