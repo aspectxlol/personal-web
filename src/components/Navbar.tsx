@@ -5,10 +5,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
-  { label: "About", href: "#about" },
-  { label: "Projects", href: "#projects" },
-  { label: "Skills", href: "#skills" },
-  { label: "Writing", href: "#writing" },
+  { label: "About", href: "/#about" },
+  { label: "Projects", href: "/#projects" },
+  { label: "Skills", href: "/#skills" },
+  { label: "Writing", href: "/#writing" },
 ];
 
 export default function Navbar() {
@@ -32,7 +32,7 @@ export default function Navbar() {
       <nav className="max-w-[1140px] w-full mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link
-          href="#hero"
+          href="/#hero"
           className="font-display font-bold text-[1.05rem] text-slate-100 tracking-tight hover:text-white transition-colors"
         >
           Louie<span className="text-cyan-400">.</span>
@@ -59,7 +59,7 @@ export default function Navbar() {
           variant="outline"
           className="text-cyan-400 border-cyan-400/25 bg-cyan-400/10 hover:bg-cyan-400/20 hover:text-cyan-300 hover:border-cyan-400/40 text-xs h-8"
         >
-          <Link href="#contact">Contact ↗</Link>
+          <Link href="/#contact">Contact ↗</Link>
         </Button>
       </nav>
     </header>
