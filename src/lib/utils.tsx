@@ -3,6 +3,7 @@ import remarkFrontmatter from "remark-frontmatter"
 import remarkParse from "remark-parse"
 import remarkRehype from "remark-rehype"
 import rehypeReact from "rehype-react"
+import remarkGfm from 'remark-gfm'
 import { remark } from "remark"
 import { VFile } from "vfile"
 import { twMerge } from "tailwind-merge"
@@ -32,6 +33,7 @@ export async function parseFileToReact(file: string) {
     .use(remarkFrontmatter)
     .use(remarkParseFrontmatter)
     .use(remarkRehype) // Convert markdown AST to HTML AST
+    .use(remarkGfm)
     .use(rehypeShiki, {
       theme: 'one-dark-pro' // or 'github-dark', 'dracula', etc.
     })
