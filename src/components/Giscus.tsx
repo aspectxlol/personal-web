@@ -6,7 +6,7 @@ export default function GiscusComponent() {
   return (
     <Giscus
       repo="aspectxlol/content-repo"
-      repoId="YOUR_REPO_ID"
+      repoId="1068562640"
       category="Blog Comments"
       categoryId="DIC_kwDOP7D40M4CwZZj"
       mapping="pathname"
