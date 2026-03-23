@@ -103,12 +103,10 @@ export default async function Home() {
               <span className="text-[0.6rem] tracking-[0.12em] uppercase text-slate-500">Currently</span>
               {[
                 { icon: "🎓", title: "Finishing high school",        sub: "Jakarta, Indonesia" },
-                { icon: "🤖", title: "Building a Discord Mafia bot",  sub: "with AI players via Groq" },
-                { icon: "📈", title: "ML trading bot research",       sub: "XGBoost on OHLCV data" },
                 { icon: "🔍", title: "Exploring new frameworks",      sub: "Go / Rust on the horizon" },
               ].map((item) => (
                 <div key={item.title} className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-md bg-[#080b11] border border-[#1a2540] flex items-center justify-center text-sm flex-shrink-0">{item.icon}</div>
+                  <div className="w-7 h-7 rounded-md bg-[#080b11] border border-[#1a2540] flex items-center justify-center text-sm shrink-0">{item.icon}</div>
                   <div>
                     <div className="text-sm text-slate-200">{item.title}</div>
                     <div className="text-xs text-slate-500 mt-0.5">{item.sub}</div>
@@ -135,7 +133,7 @@ export default async function Home() {
               </div>
               <div className="sm:hidden flex gap-3 overflow-x-scroll snap-x snap-mandatory pb-4 -mx-6 px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {repos.map((repo) => (
-                  <div key={repo.id} className="snap-start flex-shrink-0 w-[80vw]">
+                  <div key={repo.id} className="snap-start shrink-0 w-[80vw]">
                     <ProjectCard name={repo.name} description={repo.description} url={repo.html_url} language={repo.language} stars={repo.stargazers_count} topics={repo.topics} className="rounded-xl border border-[#1a2540] h-full" />
                   </div>
                 ))}
@@ -168,7 +166,7 @@ export default async function Home() {
               </div>
               <div className="sm:hidden flex gap-3 overflow-x-scroll snap-x snap-mandatory pb-4 -mx-6 px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {parsedContent.map((post) => (
-                  <div key={post.name} className="snap-start flex-shrink-0 w-[80vw]">
+                  <div key={post.name} className="snap-start shrink-0 w-[80vw]">
                     <BlogPostCard slug={post.name.replace(/\.mdx?$/, "")} title={post.metadata.title} excerpt={post.metadata.excerpt} coverImage={`https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/post${post.metadata.coverImage}`} className="h-full" />
                   </div>
                 ))}
@@ -186,7 +184,7 @@ export default async function Home() {
               <SectionHeader label="Contact" title="" className="mb-4" />
               <h2 className="font-display font-bold tracking-tight leading-[1.1] text-slate-100 mb-4" style={{ fontSize: "clamp(2rem,5vw,3.5rem)" }}>
                 Let&apos;s build{" "}
-                <span className="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">something real.</span>
+                <span className="bg-linear-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">something real.</span>
               </h2>
               <p className="text-sm text-slate-400 leading-relaxed max-w-[42ch]">
                 Whether it&apos;s an internship, a collaboration, or just a good conversation about software — I&apos;m open. Fastest response via Discord or email.
