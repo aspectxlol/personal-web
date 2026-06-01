@@ -1,5 +1,5 @@
 import GiscusComponent from "@/components/Giscus";
-import { parseFileToReact } from "@/lib/utils";
+import { parseFileToReactWithMDX } from "@/lib/utils";
 import { Metadata } from "next";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ).content
     );
 
-    const { frontmatter } = await parseFileToReact(rawRawContents);
+    const { frontmatter } = await parseFileToReactWithMDX(rawRawContents);
     const metadata = frontmatter as {
       title: string;
       excerpt: string;
@@ -113,14 +113,21 @@ export default async function Page({
     ).content
   );
 
-  const { content, frontmatter } = await parseFileToReact(rawRawContents);
+  const { content, frontmatter } = await parseFileToReactWithMDX(rawRawContents);
   const metadata = frontmatter as {
     title: string;
     excerpt: string;
     coverImage: string;
     date: string;
-    tags?: string[];
+    tags?: string[] | string;
   };
+
+  // Ensure tags is always an array
+  if (metadata.tags && typeof metadata.tags === 'string') {
+    metadata.tags = [metadata.tags];
+  }
+  
+  const tags = (metadata.tags as string[] | undefined) || [];
 
   const coverUrl =
     "https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/post" +
@@ -149,11 +156,11 @@ export default async function Page({
             <time className="text-xs tracking-widest uppercase text-slate-500">
               {formattedDate}
             </time>
-            {metadata.tags && metadata.tags.length > 0 && (
+            {tags && tags.length > 0 && (
               <>
                 <span className="text-[#1a2540]">/</span>
                 <div className="flex flex-wrap gap-2">
-                  {metadata.tags.map((tag) => (
+                  {tags.map((tag) => (
                     <span
                       key={tag}
                       className="px-2 py-0.5 text-[0.6rem] tracking-widest uppercase rounded border border-cyan-400/30 text-cyan-400 bg-cyan-400/5"
@@ -329,11 +336,11 @@ export default async function Page({
         </article>
 
         {/* Tags footer */}
-        {metadata.tags && metadata.tags.length > 0 && (
+        {tags && tags.length > 0 && (
           <div className="max-w-[860px] mx-auto px-6 pb-16">
             <div className="border-t border-[#1a2540] pt-8 flex flex-wrap gap-2 items-center">
               <span className="text-xs text-slate-600 tracking-widest uppercase mr-2">Tagged</span>
-              {metadata.tags.map((tag) => (
+              {tags.map((tag) => (
                 <span
                   key={tag}
                   className="px-3 py-1 text-[0.6rem] tracking-widest uppercase rounded border border-[#1a2540] text-slate-500 bg-[#0f1623] hover:border-cyan-400/30 hover:text-cyan-400 transition-colors"
