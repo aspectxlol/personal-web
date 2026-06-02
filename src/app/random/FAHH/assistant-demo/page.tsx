@@ -59,6 +59,31 @@ function formatCurrency(amount: number | null) {
 	}).format(amount);
 }
 
+function getMicErrorMessage(error: unknown) {
+	if (error instanceof DOMException) {
+		if (error.name === "NotAllowedError") return "Microphone permission was denied";
+		if (error.name === "NotFoundError") return "No microphone was found on this device";
+		if (error.name === "NotReadableError") return "Microphone is already in use by another app";
+		if (error.name === "SecurityError") return "Microphone access requires a secure context";
+		return error.message || "Unable to access the microphone";
+	}
+
+	if (error instanceof Error) {
+		return error.message;
+	}
+
+	return "Unable to access the microphone";
+}
+
+async function requestMicrophoneAccess() {
+	if (!navigator.mediaDevices?.getUserMedia) {
+		throw new Error("Microphone access is not available in this browser");
+	}
+
+	const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+	stream.getTracks().forEach((track) => track.stop());
+}
+
 function parseAmount(text: string) {
 	const normalized = normalizeText(text);
 	// try numeric forms first (e.g., 25.000 or 25 ribu or 3 juta)
@@ -431,12 +456,13 @@ export default function AssistantDemoPage() {
 		try {
 			recognitionRef.current.start();
 			setStatus("Listening for a wake word");
-		} catch {
-			setStatus("Microphone already active or unavailable");
+		} catch (error) {
+			setStatus(getMicErrorMessage(error));
+			setIsListening(false);
 		}
 	}, [isListening]);
 
-	React.useEffect(() => {
+	React.useEffect(() => {	
 		return () => {
 			if (resetTimerRef.current) {
 				window.clearTimeout(resetTimerRef.current);
@@ -444,7 +470,7 @@ export default function AssistantDemoPage() {
 		};
 	}, []);
 
-	const toggleListening = () => {
+	const toggleListening = async () => {
 		if (!isSupported || !recognitionRef.current) {
 			setStatus("Speech recognition is not supported in this browser");
 			return;
@@ -461,7 +487,14 @@ export default function AssistantDemoPage() {
 			return;
 		}
 
-		setIsListening(true);
+		setStatus("Requesting microphone permission...");
+		try {
+			await requestMicrophoneAccess();
+			setIsListening(true);
+		} catch (error) {
+			setStatus(getMicErrorMessage(error));
+			setIsListening(false);
+		}
 	};
     
 	return (
@@ -470,6 +503,7 @@ export default function AssistantDemoPage() {
 				<button
 					onClick={toggleListening}
 					aria-label={isListening ? "Stop listening" : "Start listening"}
+					aria-pressed={isListening}
 					className={`relative flex items-center justify-center rounded-full focus:outline-none transition-transform ${isListening ? 'scale-105' : 'scale-100'}`}
 					style={{ width: 220, height: 220 }}
 				>
@@ -478,6 +512,18 @@ export default function AssistantDemoPage() {
 						{isListening ? <Mic className="h-20 w-20 text-cyan-600" /> : <MicOff className="h-20 w-20 text-slate-400" />}
 					</div>
 				</button>
+
+				{/* <div className="max-w-[min(720px,90vw)] text-center">
+					<div className="text-sm font-medium text-slate-700">
+						{isSupported ? "Speech recognition is available" : "Speech recognition is not supported in this browser"}
+					</div>
+					<div className="mt-1 text-sm text-slate-500">
+						{isListening ? "Microphone requested. Speak a transaction phrase." : "Click the button to request microphone access and start listening."}
+					</div>
+					<div className="mt-2 text-sm text-rose-600" role="status" aria-live="polite">
+						{status}
+					</div>
+				</div> */}
 
 				<div className="w-[min(720px,90vw)] p-0 text-center">
 					<div className="text-2xl sm:text-4xl font-semibold text-slate-900 leading-snug">
@@ -521,9 +567,9 @@ export default function AssistantDemoPage() {
 				</div>
 
 				{latestTransaction ? (
-					<div className={`w-[min(520px,80vw)] mt-2 p-3 text-center bg-transparent transform transition-all duration-500 ${showTransaction ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95'}`}>
-						<div className="text-sm text-slate-600">{latestTransaction.label}</div>
-						<div className="mt-1 text-2xl font-bold text-slate-900">{formatCurrency(latestTransaction.amount)}</div>
+					<div className={`w-[min(680px,90vw)] mt-4 rounded-3xl border border-slate-200/80 bg-white/90 p-6 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-sm transform transition-all duration-500 ${showTransaction ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95'}`}>
+						<div className="text-3xl sm:text-5xl font-semibold tracking-tight text-slate-600">{latestTransaction.label}</div>
+						<div className="mt-3 text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-950">{formatCurrency(latestTransaction.amount)}</div>
 					</div>
 				) : null}
 			</div>
