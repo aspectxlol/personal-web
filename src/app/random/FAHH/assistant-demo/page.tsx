@@ -49,6 +49,7 @@ function normalizeText(text: string) {
 		.trim();
 }
 
+
 function formatCurrency(amount: number | null) {
 	if (amount === null || Number.isNaN(amount)) return "Amount not detected";
 
@@ -237,7 +238,8 @@ function parseTransaction(text: string) {
 
 
 	// Clean up common leading words and duplicate recognition artifacts
-	label = label.replace(/^(aku|saya|baru saja|baru|mau|ingin|beli|membeli|catat|catatlah)\s+/i, "").trim();
+	// include 'pembelian' so phrases like "catat pembelian ..." become just the item
+	label = label.replace(/^(aku|saya|baru saja|baru|mau|ingin|beli|membeli|pembelian|catat|catatlah)\s+/i, "").trim();
 
 	// Collapse repeated adjacent words often produced by interim results: "beli beli batagor" -> "beli batagor"
 	label = label.replace(/\b(\w+)(?:\s+\1\b)+/gi, "$1");
@@ -247,6 +249,9 @@ function parseTransaction(text: string) {
 
 	// Remove any tokens that still contain digits (like rp30) and collapse extra spaces
 	label = label.replace(/\b\S*\d+\S*\b/g, "").replace(/\s+/g, " ").trim();
+
+	// Remove any lingering leading or embedded words we don't want in the final label
+	label = label.replace(/\b(pembelian|pembelianlah|pembelianya)\b/gi, "").replace(/^[-,.:;\s]+|[-,.:;\s]+$/g, "").replace(/\s+/g, " ").trim();
 
 	if (!label) label = "Transaction detected";
 
