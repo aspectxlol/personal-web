@@ -39,7 +39,6 @@ const SKILLS: SkillGroup[] = [
 const CONTACT_LINKS: ContactLink[] = [
   { platform: "Email",     value: "gamernxt6@gmail.com", href: "mailto:gamernxt6@gmail.com",          icon: "✉️" },
   { platform: "Discord",   value: "@aspectxlol",         href: "https://discord.com/users/aspectxlol", icon: "💬" },
-  { platform: "Instagram", value: "@leui.hansen",        href: "https://instagram.com/leui.hansen",    icon: "📸" },
 ];
 
 export const dynamic = "force-static";
