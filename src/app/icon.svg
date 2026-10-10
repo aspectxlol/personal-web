@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>LH</title>
+  <rect width="64" height="64" rx="14" fill="#1b1d1c"/>
+  <path d="M15 14h8v28h14v8H15V14Z" fill="#f1eee8"/>
+  <path d="M40 14h8v36h-8V14Z" fill="#d95b3f"/>
+  <path d="M23 29h17v8H23v-8Z" fill="#f1eee8"/>
+</svg>

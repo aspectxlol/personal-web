@@ -1,99 +1,101 @@
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+"use client";
 
-const LANG_COLORS: Record<string, string> = {
-  TypeScript: "bg-[#3178c6]",
-  JavaScript: "bg-[#f7df1e]",
-  Java:       "bg-[#f89820]",
-  Rust:       "bg-[#ce422b]",
-  Go:         "bg-[#00add8]",
-  Python:     "bg-[#3572a5]",
-  HTML:       "bg-[#e34c26]",
-  CSS:        "bg-[#563d7c]",
-  Kotlin:     "bg-[#7f52ff]",
-  Swift:      "bg-[#f05138]",
-};
-
-export interface ProjectCardProps {
-  name: string;
-  description: string | null;
-  url: string;
-  language: string | null;
-  stars: number;
-  topics?: string[];
-  className?: string;
-}
+import Link from "next/link";
+import { motion } from "motion/react";
+import type { Project } from "@/lib/data";
 
 export default function ProjectCard({
-  name,
-  description,
-  url,
-  language,
-  stars,
-  topics = [],
-  className,
-}: ProjectCardProps) {
-  const langColor = language ? (LANG_COLORS[language] ?? "bg-cyan-400") : null;
-
+  project,
+  index,
+}: {
+  project: Project;
+  index: number;
+}) {
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        "group relative flex flex-col gap-3 p-6 bg-[#080b11]",
-        "border border-[#1a2540] transition-colors duration-200",
-        "hover:bg-[#0f1623]",
-        className
-      )}
+    <motion.div
+      className="neumorphic p-6 group"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      whileHover={{ scale: 1.02, y: -4 }}
+      whileTap={{ scale: 0.98, y: 0 }}
     >
-      {/* Top accent line on hover */}
-      <span className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-cyan-400 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <span className="font-display font-semibold text-slate-100 text-[0.95rem] tracking-tight leading-snug">
-          {name}
-        </span>
-        <span className="text-cyan-400 text-sm opacity-0 -translate-x-1 translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-200 flex-shrink-0">
-          ↗
-        </span>
-      </div>
-
-      {/* Description */}
-      <p className="text-[0.775rem] text-slate-400 leading-relaxed flex-1 font-mono">
-        {description ?? "No description yet."}
-      </p>
-
-      {/* Topics */}
-      {topics.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {topics.slice(0, 3).map((t) => (
-            <Badge
-              key={t}
-              variant="outline"
-              className="text-[0.6rem] px-1.5 py-0 h-5 border-white/10 text-slate-500 font-mono"
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="space-y-2">
+            <motion.h3
+              className="text-xl font-bold tracking-tight text-foreground"
+              whileHover={{ color: "var(--color-primary)" }}
             >
-              {t}
-            </Badge>
-          ))}
+              {project.title}
+            </motion.h3>
+            <motion.p
+              className="text-muted-foreground leading-relaxed"
+              whileHover={{ color: "var(--color-foreground)" }}
+            >
+              {project.description}
+            </motion.p>
+          </div>
+          <motion.span
+            className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full neumorphic text-muted-foreground"
+            whileHover={{ scale: 1.05 }}
+          >
+            {project.status}
+          </motion.span>
         </div>
-      )}
 
-      {/* Footer */}
-      <div className="flex items-center gap-4 mt-1">
-        {langColor && language && (
-          <span className="flex items-center gap-1.5 text-[0.7rem] text-slate-400 font-mono">
-            <span className={cn("w-2 h-2 rounded-full flex-shrink-0", langColor)} />
-            {language}
-          </span>
-        )}
-        {stars > 0 && (
-          <span className="flex items-center gap-1 text-[0.7rem] text-slate-400 font-mono">
-            ★ {stars}
-          </span>
+        <motion.div
+          className="flex flex-wrap gap-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 + index * 0.1 }}
+        >
+          {project.technologies.map((tech) => (
+            <motion.span
+              key={tech}
+              className="inline-flex items-center px-2 py-1 text-xs rounded-md neumorphic text-muted-foreground"
+              whileHover={{ scale: 1.05, color: "var(--color-primary)" }}
+            >
+              {tech}
+            </motion.span>
+          ))}
+        </motion.div>
+
+        {project.repository && (
+          <motion.div
+            className="mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
+          >
+            <Link
+              href={project.repository}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+            >
+              <motion.svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <path d="M18 21a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3z" />
+                <path d="M12 21a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3z" />
+                <path d="M6 21a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3z" />
+                <path d="M18 12c0-3.31-2.69-6-6-6s-6 2.69-6 6" />
+                <path d="M18 9v-4" />
+                <path d="M6 9v-4" />
+              </motion.svg>
+              <motion.span whileHover={{ x: 2 }}>View Repository</motion.span>
+            </Link>
+          </motion.div>
         )}
       </div>
-    </a>
+    </motion.div>
   );
 }

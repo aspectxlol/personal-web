@@ -1,402 +1,337 @@
-import { parseFile } from "@/lib/utils";
-import React from "react";
-import { Separator } from "@/components/ui/separator";
+"use client";
 
-import Navbar from "@/components/Navbar";
-import HeroSection from "@/components/HeroSection";
-import SectionHeader from "@/components/SectionHeader";
-import ProjectCard from "@/components/ProjectCard";
-import BlogPostCard from "@/components/BlogPostCard";
-import SkillsGrid, { type SkillGroup } from "@/components/SkillsGrid";
-import ContactLinks, { type ContactLink } from "@/components/ContactLinks";
-import Footer from "@/components/Footer";
+import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useState } from "react";
+import { projects } from "@/lib/data";
 
-type BlogPost = {
-  name: string;
-  metadata: { title: string; excerpt: string; coverImage: string };
+const reveal = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0 },
 };
 
-type GithubRepo = {
-  id: number;
-  name: string;
-  description: string | null;
-  html_url: string;
-  stargazers_count: number;
-  language: string | null;
-  topics: string[];
-  fork: boolean;
-};
-
-const SKILLS: SkillGroup[] = [
-  {
-    title: "Languages",
-    tags: [
-      { name: "TypeScript", primary: true },
-      { name: "JavaScript", primary: true },
-      { name: "Java" },
-      { name: "Bash" },
-      { name: "SQL" },
-    ],
-  },
-  {
-    title: "Frontend",
-    tags: [
-      { name: "Next.js", primary: true },
-      { name: "React", primary: true },
-      { name: "Tailwind CSS" },
-      { name: "HTML/CSS" },
-    ],
-  },
-  {
-    title: "Backend",
-    tags: [
-      { name: "Fastify", primary: true },
-      { name: "Node.js", primary: true },
-      { name: "Drizzle ORM" },
-      { name: "PostgreSQL" },
-      { name: "Redis" },
-    ],
-  },
-  {
-    title: "Infra",
-    tags: [
-      { name: "Linux", primary: true },
-      { name: "Docker" },
-      { name: "Self-hosting" },
-      { name: "Railway" },
-      { name: "Vercel" },
-    ],
-  },
-  {
-    title: "Tools",
-    tags: [
-      { name: "Git", primary: true },
-      { name: "GitHub Actions" },
-      { name: "WebSockets" },
-      { name: "REST APIs" },
-    ],
-  },
-  {
-    title: "Exploring",
-    tags: [
-      { name: "Go" },
-      { name: "Rust" },
-      { name: "Godot" },
-      { name: "ML / XGBoost" },
-    ],
-  },
-];
-
-const CONTACT_LINKS: ContactLink[] = [
-  {
-    platform: "Email",
-    value: "gamernxt6@gmail.com",
-    href: "mailto:gamernxt6@gmail.com",
-    icon: "✉️",
-  },
-  {
-    platform: "Discord",
-    value: "@aspectxlol",
-    href: "https://discord.com/users/aspectxlol",
-    icon: "💬",
-  },
-];
-
-export const dynamic = "force-static";
-export const revalidate = false;
-
-export default async function Home() {
-  // Blog posts
-  const rawContents = await fetch(
-    "https://api.github.com/repos/aspectxlol/content-repo/contents/post",
-    { headers: { authorization: `Bearer ${process.env.GITHUB_ACCESS_TOKEN}` } },
-  )
-    .then((r) => r.json())
-    .catch(() => []);
-
-  const contents = Array.isArray(rawContents)
-    ? rawContents
-        .filter(
-          (item: { name: string }) =>
-            item.name.endsWith(".md") || item.name.endsWith(".mdx"),
-        )
-        .map((item: { name: string; _links: { self: string } }) => ({
-          name: item.name,
-          url: item._links.self,
-        }))
-    : [];
-
-  const parsedContent: BlogPost[] = [];
-  for (const item of contents) {
-    const fileData = await fetch(item.url, {
-      headers: { authorization: `Bearer ${process.env.GITHUB_ACCESS_TOKEN}` },
-    })
-      .then((r) => r.json())
-      .catch(() => null);
-    if (!fileData) continue;
-    const parsed = await parseFile(atob(fileData.content));
-    parsedContent.push({
-      name: item.name,
-      metadata: parsed.data.frontmatter as BlogPost["metadata"],
-    });
-  }
-
-  // GitHub repos — fetch all, use total for stat, show non-forks in grid
-  const rawRepos = await fetch(
-    "https://api.github.com/users/aspectxlol/repos?sort=pushed&per_page=100&type=public",
-    { headers: { authorization: `Bearer ${process.env.GITHUB_ACCESS_TOKEN}` } },
-  )
-    .then((r) => r.json())
-    .catch(() => []);
-
-  const allRepos: GithubRepo[] = Array.isArray(rawRepos) ? rawRepos : [];
-  const totalRepoCount = allRepos.length;
-  const repos = allRepos.filter((r) => !r.fork).slice(0, 6);
+function Reveal({
+  children,
+  className = "",
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  const reduce = useReducedMotion();
 
   return (
-    <div className="bg-[#080b11] text-slate-100 font-mono antialiased h-screen overflow-y-scroll snap-y snap-proximity scroll-smooth [scrollbar-width:thin] [scrollbar-color:#2d3f5a_#080b11]">
-      <Navbar />
+    <motion.div
+      className={className}
+      initial={reduce ? false : "hidden"}
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.2 }}
+      variants={reveal}
+      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
-      {/* Hero — repoCount shows total public repos (including forks) */}
-      <div className="snap-start">
-        <HeroSection repoCount={totalRepoCount} />
+function ArrowUpRight() {
+  return (
+    <span
+      aria-hidden="true"
+      className="text-lg leading-none transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
+    >
+      ↗
+    </span>
+  );
+}
+
+type DevQuote = {
+  quote: string;
+  author: string;
+};
+
+const fallbackQuote: DevQuote = {
+  quote: "Simplicity is prerequisite for reliability.",
+  author: "Edsger W. Dijkstra",
+};
+
+function DevQuoteSection() {
+  const [quote, setQuote] = useState<DevQuote>(fallbackQuote);
+
+  useEffect(() => {
+    let active = true;
+
+    fetch("/dev-quotes.json")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Quote library request failed: ${response.status}`);
+        }
+        return response.json() as Promise<DevQuote[]>;
+      })
+      .then((quotes) => {
+        if (!active || quotes.length === 0) return;
+        const selected = quotes[Math.floor(Math.random() * quotes.length)];
+        setQuote({
+          quote: selected.quote.replace(/[—–]/g, "-"),
+          author: selected.author,
+        });
+      })
+      .catch(() => {
+        // Keep the curated fallback visible when the static quote library is unavailable.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return (
+    <section className="statement section-shell">
+      <Reveal>
+        <p className="eyebrow">A developer thought</p>
+        <p className="statement-text">&ldquo;{quote.quote}&rdquo;</p>
+        <p className="quote-author">- {quote.author}</p>
+      </Reveal>
+    </section>
+  );
+}
+
+function ProjectCarousel() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const project = projects[activeIndex];
+  const projectCount = projects.length;
+
+  if (!project) return null;
+
+  const showPrevious = () => {
+    setActiveIndex((current) => (current - 1 + projectCount) % projectCount);
+  };
+
+  const showNext = () => {
+    setActiveIndex((current) => (current + 1) % projectCount);
+  };
+
+  return (
+    <Reveal className="project-carousel" delay={0.1}>
+      <div className="project-carousel-top">
+        <p className="project-number">
+          {String(activeIndex + 1).padStart(2, "0")} /{" "}
+          {String(projectCount).padStart(2, "0")}
+        </p>
+        <div
+          className="carousel-controls"
+          aria-label="Project carousel controls"
+        >
+          <button
+            type="button"
+            onClick={showPrevious}
+            aria-label="Previous project"
+            disabled={projectCount < 2}
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            onClick={showNext}
+            aria-label="Next project"
+            disabled={projectCount < 2}
+          >
+            →
+          </button>
+        </div>
       </div>
+      <div className="project-carousel-content">
+        <div>
+          <p className="project-status">{project.status}</p>
+          <h3>{project.title}</h3>
+          <p className="project-description">{project.description}</p>
+        </div>
+        <div className="project-meta">
+          <span>Stack</span>
+          <strong>{project.technologies.join(" / ")}</strong>
+        </div>
+      </div>
+      {project.repository && (
+        <a
+          href={project.repository}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-link"
+        >
+          Open repository <ArrowUpRight />
+        </a>
+      )}
+    </Reveal>
+  );
+}
 
-      {/* About */}
-      <section
-        id="about"
-        className="snap-start py-24 border-t border-[#1a2540]"
-      >
-        <div className="max-w-[1140px] mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            <div>
-              <SectionHeader
-                label="About"
-                title={
-                  <>
-                    Going somewhere,
-                    <br />
-                    fast.
-                  </>
-                }
-              />
-              <div className="flex flex-col gap-4 text-sm text-slate-400 leading-[1.85]">
-                <p>
-                  I&apos;m a{" "}
-                  <strong className="text-slate-200 font-medium">
-                    senior high school student
-                  </strong>{" "}
-                  in Jakarta who codes like it&apos;s already my job. Web
-                  development is my main arena —{" "}
-                  <span className="text-cyan-400">
-                    TypeScript, Next.js, system design
-                  </span>{" "}
-                  — but I&apos;m always pulling new threads.
-                </p>
-                <p>
-                  I believe the best developers ship things. So I build: a{" "}
-                  <strong className="text-slate-200 font-medium">
-                    Discord Mafia bot
-                  </strong>{" "}
-                  with AI players, a{" "}
-                  <strong className="text-slate-200 font-medium">
-                    self-hostable PoS system
-                  </strong>
-                  , a collaborative jam session app, game backends — projects
-                  that push me into uncomfortable territory.
-                </p>
-                <p>
-                  Starting university soon. Looking for an{" "}
-                  <span className="text-cyan-400">
-                    internship or junior role
-                  </span>{" "}
-                  where I can contribute real work from day one. I&apos;m not
-                  trying to break in — I&apos;m already in.
-                </p>
-              </div>
-            </div>
-            <div className="bg-[#0f1623] border border-[#1a2540] rounded-xl p-6 flex flex-col gap-5">
-              <span className="text-[0.6rem] tracking-[0.12em] uppercase text-slate-500">
-                Currently
-              </span>
-              {[
-                {
-                  icon: "🎓",
-                  title: "Finishing high school",
-                  sub: "Jakarta, Indonesia",
-                },
-                {
-                  icon: "🔍",
-                  title: "Exploring new frameworks",
-                  sub: "Go / Rust on the horizon",
-                },
-              ].map((item) => (
-                <div key={item.title} className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-md bg-[#080b11] border border-[#1a2540] flex items-center justify-center text-sm shrink-0">
-                    {item.icon}
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-200">{item.title}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">
-                      {item.sub}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+export default function Page() {
+  return (
+    <main>
+      <header className="site-header">
+        <Link href="#top" className="brand-mark" aria-label="Louie Hansen home">
+          LH<span>.</span>
+        </Link>
+        <nav aria-label="Main navigation" className="site-nav">
+          <Link href="#work">Work</Link>
+          <Link href="#about">About</Link>
+          <Link href="#contact">Contact</Link>
+        </nav>
+        <a href="mailto:louiehlinadi@gmail.com" className="header-availability">
+          Available for work
+        </a>
+      </header>
+
+      <section id="top" className="hero section-shell">
+        <div className="hero-copy">
+          <p className="eyebrow">Backend engineer / builder</p>
+          <h1>
+            <em>Louie Hansen.</em>
+          </h1>
+          <p className="hero-intro">
+            Backend engineer building reliable software.
+          </p>
+          <div className="hero-actions">
+            <Link href="#work" className="button button-primary group">
+              See selected work <ArrowUpRight />
+            </Link>
+            <a href="mailto:louiehlinadi@gmail.com" className="text-link">
+              Start a conversation <ArrowUpRight />
+            </a>
           </div>
         </div>
-      </section>
-
-      {/* Projects */}
-      <section
-        id="projects"
-        className="snap-start py-24 border-t border-[#1a2540]"
-      >
-        <div className="max-w-[1140px] mx-auto px-6">
-          <SectionHeader
-            label="Projects"
-            title="Projects"
-            description="These are some of my Favorite projects that I've built, I like to ship things that are useful, fun, and open source."
-          />
-          {repos.length === 0 ? (
-            <div className="py-16 text-center text-sm text-slate-500 border border-dashed border-[#1a2540] rounded-xl">
-              Could not load projects right now.
-            </div>
-          ) : (
-            <>
-              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-[#1a2540] border border-[#1a2540] rounded-xl overflow-hidden">
-                {repos.map((repo) => (
-                  <ProjectCard
-                    key={repo.id}
-                    name={repo.name}
-                    description={repo.description}
-                    url={repo.html_url}
-                    language={repo.language}
-                    stars={repo.stargazers_count}
-                    topics={repo.topics}
-                  />
-                ))}
-              </div>
-              <div className="sm:hidden flex gap-3 overflow-x-scroll snap-x snap-mandatory pb-4 -mx-6 px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {repos.map((repo) => (
-                  <div key={repo.id} className="snap-start shrink-0 w-[80vw]">
-                    <ProjectCard
-                      name={repo.name}
-                      description={repo.description}
-                      url={repo.html_url}
-                      language={repo.language}
-                      stars={repo.stargazers_count}
-                      topics={repo.topics}
-                      className="rounded-xl border border-[#1a2540] h-full"
-                    />
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* Skills */}
-      <section
-        id="skills"
-        className="snap-start py-24 border-t border-[#1a2540]"
-      >
-        <div className="max-w-[1140px] mx-auto px-6">
-          <SectionHeader
-            label="Skills"
-            title="The stack"
-            description="Tools I reach for first, frameworks I've shipped with, and infrastructure I actually understand."
-          />
-          <SkillsGrid groups={SKILLS} />
-        </div>
-      </section>
-
-      {/* Writing */}
-      <section
-        id="writing"
-        className="snap-start py-24 border-t border-[#1a2540]"
-      >
-        <div className="max-w-[1140px] mx-auto px-6">
-          <SectionHeader
-            label="Writing"
-            title="Blog"
-            description="Occasional writing on things I'm building, learning, or thinking about."
-          />
-          {parsedContent.length === 0 ? (
-            <div className="py-16 text-center text-sm text-slate-500 border border-dashed border-[#1a2540] rounded-xl">
-              No posts yet — check back soon.
-            </div>
-          ) : (
-            <>
-              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {parsedContent.map((post) => (
-                  <BlogPostCard
-                    key={post.name}
-                    slug={post.name.replace(/\.mdx?$/, "")}
-                    title={post.metadata.title}
-                    excerpt={post.metadata.excerpt}
-                    coverImage={`https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/post${post.metadata.coverImage}`}
-                  />
-                ))}
-              </div>
-              <div className="sm:hidden flex gap-3 overflow-x-scroll snap-x snap-mandatory pb-4 -mx-6 px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {parsedContent.map((post) => (
-                  <div key={post.name} className="snap-start shrink-0 w-[80vw]">
-                    <BlogPostCard
-                      slug={post.name.replace(/\.mdx?$/, "")}
-                      title={post.metadata.title}
-                      excerpt={post.metadata.excerpt}
-                      coverImage={`https://raw.githubusercontent.com/aspectxlol/content-repo/refs/heads/master/post${post.metadata.coverImage}`}
-                      className="h-full"
-                    />
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* Contact */}
-      <section
-        id="contact"
-        className="snap-start py-24 border-t border-[#1a2540]"
-      >
-        <div className="max-w-[1140px] mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <SectionHeader label="Contact" title="" className="mb-4" />
-              <h2
-                className="font-display font-bold tracking-tight leading-[1.1] text-slate-100 mb-4"
-                style={{ fontSize: "clamp(2rem,5vw,3.5rem)" }}
-              >
-                Let&apos;s build{" "}
-                <span className="bg-linear-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
-                  something real.
-                </span>
-              </h2>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-[42ch]">
-                Whether it&apos;s an internship, a collaboration, or just a good
-                conversation about software — I&apos;m open. Fastest response
-                via Discord or email.
-              </p>
-            </div>
-            <ContactLinks links={CONTACT_LINKS} />
+        <Reveal className="hero-visual hero-signal" delay={0.2}>
+          <div className="signal-mark" aria-hidden="true">
+            LH
           </div>
+          <div className="signal-lines" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="hero-caption">
+            <span>01</span>
+            <span>Build / ship / learn</span>
+          </div>
+        </Reveal>
+      </section>
+
+      <DevQuoteSection />
+
+      <section id="work" className="work section-shell">
+        <Reveal className="section-heading">
+          <p className="eyebrow">Selected work</p>
+          <h2>Small list. Serious intent.</h2>
+        </Reveal>
+
+        <ProjectCarousel />
+
+        <div className="work-note">
+          <a
+            href="https://github.com/aspectxlol"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-link"
+          >
+            Browse GitHub <ArrowUpRight />
+          </a>
         </div>
       </section>
 
-      {/* Footer */}
-      <div className="snap-start">
-        <Separator className="bg-[#1a2540]" />
-        <Footer
-          name="Louie Hansen"
-          github="aspectxlol"
-          location="Jakarta, ID"
-        />
-      </div>
-    </div>
+      <section className="capabilities section-shell">
+        <Reveal className="capabilities-intro">
+          <p className="eyebrow">What I bring</p>
+          <h2>From first commit to reliable release.</h2>
+        </Reveal>
+        <Reveal className="capability-list" delay={0.1}>
+          {[
+            [
+              "01",
+              "Backend systems",
+              "APIs, data models, and services that stay understandable as they grow.",
+            ],
+            [
+              "02",
+              "Full-stack products",
+              "Thoughtful interfaces connected to the systems behind them.",
+            ],
+            [
+              "03",
+              "Infrastructure",
+              "Deployment, observability, and the practical work that keeps software moving.",
+            ],
+          ].map(([number, title, description]) => (
+            <article key={number} className="capability">
+              <span>{number}</span>
+              <div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </div>
+              <ArrowUpRight />
+            </article>
+          ))}
+        </Reveal>
+      </section>
+
+      <section id="about" className="about section-shell">
+        <Reveal className="about-image about-signal">
+          <span>Curiosity index</span>
+          <strong>
+            Go deep.
+            <br />
+            Stay useful.
+          </strong>
+          <small>backend / product / infrastructure</small>
+        </Reveal>
+        <Reveal className="about-copy" delay={0.15}>
+          <p className="eyebrow">A little context</p>
+          <h2>Curious enough to go deep.</h2>
+          <p>
+            I&apos;m an Informatics student at Universitas Bunda Mulia,
+            interested in backend engineering, infrastructure, and the systems
+            that make software work.
+          </p>
+          <p>
+            I care about understanding how things work under the hood, writing
+            code that's easy to reason about, and building things that solve
+            real problems. Sometimes that means keeping things simple. Sometimes
+            it means spending an unreasonable amount of time on a side project
+            just to learn something new.
+          </p>
+          <a
+            href="https://linkedin.com/in/louie-hansen-linadi-aa4969290"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-link"
+          >
+            More on LinkedIn <ArrowUpRight />
+          </a>
+        </Reveal>
+      </section>
+
+      <section id="contact" className="contact section-shell">
+        <Reveal>
+          <p className="eyebrow">Have a good problem?</p>
+          <h2>
+            Let&apos;s build
+            <br />
+            something <em>useful.</em>
+          </h2>
+          <a
+            href="mailto:louiehlinadi@gmail.com"
+            className="contact-link group"
+          >
+            louiehlinadi@gmail.com <ArrowUpRight />
+          </a>
+        </Reveal>
+      </section>
+
+      <footer className="site-footer">
+        <span>© {new Date().getFullYear()} Louie Hansen Linadi</span>
+        <span>Built with Next.js and care.</span>
+        <a href="#top">Back to top ↑</a>
+      </footer>
+    </main>
   );
 }
