@@ -1,0 +1,22 @@
+# Louie Hansen
+
+> Portfolio of Louie Hansen Linadi, a backend engineer and Informatics student.
+
+## About
+
+Louie Hansen Linadi builds reliable software across backend systems, full-stack products, and infrastructure. He studies Informatics at Universitas Bunda Mulia and is interested in practical engineering, readable code, and dependable releases.
+
+## Focus
+
+- Backend engineering
+- Full-stack development
+- DevOps and infrastructure
+- APIs and data models
+- TypeScript and Next.js
+
+## Links
+
+- Portfolio: https://louie.is-a.dev
+- GitHub: https://github.com/aspectxlol
+- LinkedIn: https://linkedin.com/in/louie-hansen-linadi-aa4969290
+- Email: mailto:louiehlinadi@gmail.com
