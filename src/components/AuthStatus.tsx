@@ -6,11 +6,44 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function AuthStatus() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [canAccessDashboard, setCanAccessDashboard] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [accessCheckFailed, setAccessCheckFailed] = useState(false);
 
   useEffect(() => {
     const client = createSupabaseBrowserClient();
     let active = true;
+
+    async function syncAuthState(session: Awaited<ReturnType<typeof client.auth.getSession>>["data"]["session"]) {
+      setUserEmail(session?.user?.email ?? null);
+      setCanAccessDashboard(false);
+
+      if (!session) {
+        setAccessCheckFailed(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/auth/dashboard-access", {
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error(`Dashboard access check failed: ${response.status}`);
+        }
+
+        const result: { canAccessDashboard: boolean } = await response.json();
+        if (!active) return;
+        setCanAccessDashboard(result.canAccessDashboard);
+        setAccessCheckFailed(false);
+      } catch {
+        if (!active) return;
+        setCanAccessDashboard(false);
+        setAccessCheckFailed(true);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
 
     async function loadSession() {
       const {
@@ -18,8 +51,7 @@ export function AuthStatus() {
       } = await client.auth.getSession();
 
       if (!active) return;
-      setUserEmail(session?.user?.email ?? null);
-      setLoading(false);
+      await syncAuthState(session);
     }
 
     loadSession();
@@ -27,9 +59,7 @@ export function AuthStatus() {
     const {
       data: { subscription },
     } = client.auth.onAuthStateChange((_event, session) => {
-      if (!active) return;
-      setUserEmail(session?.user?.email ?? null);
-      setLoading(false);
+      void syncAuthState(session);
     });
 
     return () => {
@@ -42,6 +72,7 @@ export function AuthStatus() {
     const client = createSupabaseBrowserClient();
     await client.auth.signOut();
     setUserEmail(null);
+    setCanAccessDashboard(false);
   };
 
   if (loading) {
@@ -51,12 +82,19 @@ export function AuthStatus() {
   if (userEmail) {
     return (
       <div className="header-auth-menu">
-        <Link href="/dashboard" className="header-availability">
-          Dashboard
-        </Link>
+        {canAccessDashboard && (
+          <Link href="/dashboard" className="header-availability">
+            Dashboard
+          </Link>
+        )}
         <button type="button" className="header-auth-button" onClick={handleSignOut}>
           Sign out
         </button>
+        {accessCheckFailed && (
+          <span className="header-auth-status" role="status">
+            Dashboard access unavailable
+          </span>
+        )}
       </div>
     );
   }

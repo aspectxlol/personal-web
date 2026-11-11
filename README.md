@@ -44,6 +44,12 @@ Routes included:
 - `/auth/callback` and `/auth/confirm` for auth redirects
 - `/dashboard` for a protected authenticated page
 
+## Dashboard forms
+
+The admin dashboard includes a forms workspace with draft, active, and past form lists. New forms always start as drafts. Use the form editor to save changes or explicitly publish a form.
+
+Apply the SQL migration in `supabase/migrations/202611110001_create_forms.sql` to the Supabase project before using the forms workspace. The table uses row-level security so authenticated users can only access their own forms; the app further restricts the workspace to `ADMIN_USER_UID`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

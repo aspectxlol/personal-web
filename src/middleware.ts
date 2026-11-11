@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAuthorizedDashboardUser } from "@/lib/supabase/admin-config";
 
 function getSupabaseEnv() {
   const url =
@@ -18,8 +19,11 @@ function getSupabaseEnv() {
 
 export async function middleware(request: NextRequest) {
   const { url, anonKey } = getSupabaseEnv();
+  const pathname = request.nextUrl.pathname;
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/form/");
 
-  if (!request.nextUrl.pathname.startsWith("/dashboard") || !url || !anonKey) {
+  if (!isProtectedRoute || !url || !anonKey) {
     return NextResponse.next();
   }
 
@@ -54,9 +58,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  if (!isAuthorizedDashboardUser(user.id)) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/form/:path*"],
 };

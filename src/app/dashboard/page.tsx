@@ -1,49 +1,33 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default async function DashboardPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    redirect("/auth/login?redirectTo=/dashboard");
-  }
-
+export default function DashboardPage() {
   return (
-    <main className="auth-page">
-      <div className="auth-shell auth-shell-wide">
-        <div className="auth-card auth-card-wide">
-          <p className="eyebrow">Dashboard</p>
-          <h1>Welcome back</h1>
-          <p className="auth-subtitle">
-            You are signed in as <strong>{user.email}</strong>.
+    <div className="dashboard-overview">
+      <header className="dashboard-page-header">
+        <div>
+          <p className="dashboard-eyebrow">Workspace</p>
+          <h1>Overview</h1>
+          <p className="dashboard-page-description">
+            Manage your forms and keep your work organized.
           </p>
-
-          <div className="auth-panel">
-            <div>
-              <span className="auth-panel-label">Status</span>
-              <strong>Authenticated</strong>
-            </div>
-            <div>
-              <span className="auth-panel-label">Provider</span>
-              <strong>{user.app_metadata?.provider ?? "email"}</strong>
-            </div>
-          </div>
-
-          <div className="auth-actions auth-actions-vertical">
-            <Link href="/" className="button button-primary">
-              Back to portfolio
-            </Link>
-            <Link href="/auth/login?redirectTo=/dashboard" className="button">
-              Switch account
-            </Link>
-          </div>
         </div>
-      </div>
-    </main>
+      </header>
+
+      <section className="dashboard-overview-grid" aria-label="Workspace sections">
+        <Link href="/dashboard/forms" className="dashboard-overview-card">
+          <span className="dashboard-card-icon" aria-hidden="true">
+            ▤
+          </span>
+          <span className="dashboard-card-kicker">Workspace</span>
+          <strong>Forms</strong>
+          <span className="dashboard-card-description">
+            Create, edit, and publish forms.
+          </span>
+          <span className="dashboard-card-arrow" aria-hidden="true">
+            →
+          </span>
+        </Link>
+      </section>
+    </div>
   );
 }
