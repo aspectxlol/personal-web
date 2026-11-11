@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
+import { AuthStatus } from "@/components/AuthStatus";
 import { projects } from "@/lib/data";
 
 const reveal = {
@@ -178,9 +179,9 @@ export default function Page() {
           <Link href="#about">About</Link>
           <Link href="#contact">Contact</Link>
         </nav>
-        <a href="mailto:louiehlinadi@gmail.com" className="header-availability">
-          Available for work
-        </a>
+        <div className="header-actions">
+          <AuthStatus />
+        </div>
       </header>
 
       <section id="top" className="hero section-shell">

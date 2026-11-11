@@ -20,6 +20,30 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Supabase authentication
+
+This project uses Google OAuth via Supabase Auth. Email/password and magic-link sign-in are intentionally not enabled.
+
+Required environment variables:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-or-publishable-key>"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+```
+
+Setup notes:
+
+- Enable Google as an auth provider in your Supabase project
+- Add your app redirect URLs in Supabase Auth settings
+- The login flow redirects to `/auth/callback` and then back into the app
+
+Routes included:
+
+- `/auth/login` for Google sign in
+- `/auth/callback` and `/auth/confirm` for auth redirects
+- `/dashboard` for a protected authenticated page
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
