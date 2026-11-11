@@ -62,13 +62,11 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
       const updates: {
         title: string;
         description: string;
-        close_date: string | null;
         fields: FormField[];
         status?: FormStatus;
       } = {
         title: form.title,
         description: form.description,
-        close_date: form.close_date,
         fields: form.fields,
       };
       if (status !== form.status) updates.status = status;
@@ -102,10 +100,6 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
     void save(form.status === "published" ? "draft" : "published");
   };
 
-  const isPast =
-    form.status === "published" &&
-    Boolean(form.close_date && form.close_date < new Date().toISOString().slice(0, 10));
-
   return (
     <div className="form-editor">
       <header className="form-editor-header">
@@ -125,7 +119,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
             />
             <span className={`form-status is-${form.status}`}>
               <span aria-hidden="true" />
-              {isPast ? "past" : form.status}
+              {form.status}
             </span>
           </div>
           <p className="dashboard-page-description">
@@ -299,28 +293,13 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
               placeholder="Tell people what this form is about."
             />
           </label>
-          <label>
-            Closing date
-            <input
-              type="date"
-              value={form.close_date ?? ""}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  close_date: event.target.value || null,
-                }))
-              }
-            />
-          </label>
           <div className="form-settings-status">
             <span>Status</span>
-            <strong>{isPast ? "Past" : form.status === "published" ? "Active" : "Draft"}</strong>
+            <strong>{form.status === "published" ? "Active" : "Draft"}</strong>
             <p>
               {form.status === "draft"
                 ? "Only you can see this draft. Publish when it is ready."
-                : form.close_date
-                  ? `This form is scheduled to close on ${form.close_date}.`
-                  : "This form is published with no closing date."}
+                : "This form is published and available to fill out."}
             </p>
           </div>
         </aside>

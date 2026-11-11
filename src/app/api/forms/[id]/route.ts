@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import {
-  isValidCloseDate,
   parseFormFieldList,
   parseFormFields,
   toFormRecord,
@@ -84,17 +83,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Description must be 2,000 characters or fewer." }, { status: 400 });
     }
     updates.description = input.description.trim();
-    hasUpdate = true;
-  }
-
-  if ("close_date" in input) {
-    if (
-      input.close_date !== null &&
-      (typeof input.close_date !== "string" || !isValidCloseDate(input.close_date))
-    ) {
-      return NextResponse.json({ error: "Choose a valid closing date." }, { status: 400 });
-    }
-    updates.close_date = input.close_date;
     hasUpdate = true;
   }
 

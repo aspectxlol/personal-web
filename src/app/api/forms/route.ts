@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminContext } from "@/lib/supabase/admin";
-import { isValidCloseDate, toFormRecord } from "@/lib/forms/validation";
+import { toFormRecord } from "@/lib/forms/validation";
 
 export async function GET() {
   const admin = await requireAdminContext();
@@ -42,7 +42,6 @@ export async function POST(request: Request) {
     typeof input.title === "string" ? input.title.trim() : "";
   const description =
     typeof input.description === "string" ? input.description.trim() : "";
-  const closeDate = input.close_date;
 
   if (!title || title.length > 120 || description.length > 2000) {
     return NextResponse.json(
@@ -51,21 +50,12 @@ export async function POST(request: Request) {
     );
   }
 
-  if (
-    closeDate !== undefined &&
-    closeDate !== null &&
-    (typeof closeDate !== "string" || !isValidCloseDate(closeDate))
-  ) {
-    return NextResponse.json({ error: "Choose a valid closing date." }, { status: 400 });
-  }
-
   const { data, error } = await admin.supabase
     .from("forms")
     .insert({
       user_id: admin.user.id,
       title,
       description,
-      close_date: closeDate ?? null,
       status: "draft",
       fields: [],
     })

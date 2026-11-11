@@ -20,7 +20,6 @@ export type FormRecord = {
   title: string;
   description: string;
   status: FormStatus;
-  close_date: string | null;
   fields: FormField[];
   created_at: string;
   updated_at: string;

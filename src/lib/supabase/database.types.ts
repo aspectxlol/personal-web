@@ -18,7 +18,6 @@ export type Database = {
           title: string;
           description: string;
           status: FormStatus;
-          close_date: string | null;
           fields: Json;
           created_at: string;
           updated_at: string;
@@ -30,7 +29,6 @@ export type Database = {
           title: string;
           description?: string;
           status?: FormStatus;
-          close_date?: string | null;
           fields?: Json;
           created_at?: string;
           updated_at?: string;
@@ -42,7 +40,6 @@ export type Database = {
           title?: string;
           description?: string;
           status?: FormStatus;
-          close_date?: string | null;
           fields?: Json;
           created_at?: string;
           updated_at?: string;

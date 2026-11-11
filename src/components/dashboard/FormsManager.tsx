@@ -5,18 +5,12 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import type { FormRecord } from "@/lib/forms/types";
 
-type FormTab = "active" | "past" | "drafts";
+type FormTab = "active" | "drafts";
 
 const tabs: { id: FormTab; label: string }[] = [
   { id: "active", label: "Active" },
-  { id: "past", label: "Past" },
   { id: "drafts", label: "Drafts" },
 ];
-
-const formDateFormatter = new Intl.DateTimeFormat("en-US", {
-  dateStyle: "medium",
-  timeZone: "UTC",
-});
 
 export function FormsManager({
   initialForms,
@@ -31,7 +25,6 @@ export function FormsManager({
   const [modalOpen, setModalOpen] = useState(false);
   const [formName, setFormName] = useState("");
   const [description, setDescription] = useState("");
-  const [closeDate, setCloseDate] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -53,24 +46,12 @@ export function FormsManager({
     }
   }, [modalOpen]);
 
-  const today = new Date().toISOString().slice(0, 10);
   const visibleForms = forms.filter((form) => {
     if (activeTab === "drafts") return form.status === "draft";
-    if (form.status !== "published") return false;
-    const isPast = Boolean(form.close_date && form.close_date < today);
-    return activeTab === "past" ? isPast : !isPast;
+    return form.status === "published";
   });
   const counts = {
-    active: forms.filter(
-      (form) =>
-        form.status === "published" &&
-        (!form.close_date || form.close_date >= today),
-    ).length,
-    past: forms.filter(
-      (form) =>
-        form.status === "published" &&
-        Boolean(form.close_date && form.close_date < today),
-    ).length,
+    active: forms.filter((form) => form.status === "published").length,
     drafts: forms.filter((form) => form.status === "draft").length,
   };
 
@@ -80,7 +61,6 @@ export function FormsManager({
     setError("");
     setFormName("");
     setDescription("");
-    setCloseDate("");
   };
 
   const createForm = async (event: FormEvent<HTMLFormElement>) => {
@@ -95,7 +75,6 @@ export function FormsManager({
         body: JSON.stringify({
           title: formName,
           description,
-          close_date: closeDate || null,
         }),
       });
       const result: { form?: { id?: unknown }; error?: string } = await response
@@ -172,39 +151,26 @@ export function FormsManager({
 
         {visibleForms.length > 0 ? (
           <div className="forms-grid">
-            {visibleForms.map((form) => {
-              const isPast =
-                form.status === "published" &&
-                Boolean(form.close_date && form.close_date < today);
-              return (
-                <article className="form-card" key={form.id}>
-                  <div className="form-card-top">
-                    <span className={`form-status is-${isPast ? "past" : form.status}`}>
-                      <span aria-hidden="true" />
-                      {isPast ? "past" : form.status}
-                    </span>
-                    {form.close_date && (
-                      <span className="form-card-date">
-                        Closes{" "}
-                        {formDateFormatter.format(
-                          new Date(`${form.close_date}T00:00:00Z`),
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <div className="form-card-copy">
-                    <h2>{form.title}</h2>
-                    <p>{form.description || "No description added yet."}</p>
-                  </div>
-                  <div className="form-card-footer">
-                    <span>{form.fields.length} questions</span>
-                    <Link href={`/form/${form.id}/edit`} className="form-card-link">
-                      Edit form <span aria-hidden="true">→</span>
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
+            {visibleForms.map((form) => (
+              <article className="form-card" key={form.id}>
+                <div className="form-card-top">
+                  <span className={`form-status is-${form.status}`}>
+                    <span aria-hidden="true" />
+                    {form.status}
+                  </span>
+                </div>
+                <div className="form-card-copy">
+                  <h2>{form.title}</h2>
+                  <p>{form.description || "No description added yet."}</p>
+                </div>
+                <div className="form-card-footer">
+                  <span>{form.fields.length} questions</span>
+                  <Link href={`/form/${form.id}/edit`} className="form-card-link">
+                    Edit form <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              </article>
+            ))}
           </div>
         ) : (
           <div className="forms-empty-state">
@@ -212,18 +178,12 @@ export function FormsManager({
               ▤
             </span>
             <h2>
-              {activeTab === "drafts"
-                ? "No drafts yet"
-                : activeTab === "past"
-                  ? "No past forms"
-                  : "No active forms yet"}
+              {activeTab === "drafts" ? "No drafts yet" : "No active forms yet"}
             </h2>
             <p>
               {activeTab === "drafts"
                 ? "New forms stay as drafts until you publish them."
-                : activeTab === "past"
-                  ? "Published forms past their closing date will appear here."
-                  : "Publish a form to make it active in your workspace."}
+                : "Publish a form to make it active in your workspace."}
             </p>
             {activeTab === "drafts" && (
               <button
@@ -285,15 +245,6 @@ export function FormsManager({
               placeholder="What is this form for?"
             />
           </label>
-          <label>
-            Closing date <span className="form-optional">Optional</span>
-            <input
-              type="date"
-              value={closeDate}
-              onChange={(event) => setCloseDate(event.target.value)}
-            />
-          </label>
-
           <div className="draft-note">
             <span className="draft-note-dot" aria-hidden="true" />
             This form will be created as a draft. You can publish it from the editor.

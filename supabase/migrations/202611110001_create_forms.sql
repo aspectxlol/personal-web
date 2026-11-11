@@ -4,7 +4,6 @@ create table if not exists public.forms (
   title text not null check (char_length(title) between 1 and 120),
   description text not null default '',
   status text not null default 'draft' check (status in ('draft', 'published')),
-  close_date date,
   fields jsonb not null default '[]'::jsonb
     check (
       case
