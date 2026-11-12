@@ -15,35 +15,101 @@ export type Database = {
         Row: {
           id: string;
           user_id: string;
+          owner_id?: string | null;
           title: string;
-          description: string;
+          description: string | null;
+          slug?: string | null;
           status: FormStatus;
-          fields: Json;
+          draft_definition?: Json | null;
+          published_version_id?: string | null;
+          accepting_responses?: boolean | null;
           created_at: string;
           updated_at: string;
-          published_at: string | null;
         };
         Insert: {
           id?: string;
           user_id?: string;
+          owner_id?: string | null;
           title: string;
-          description?: string;
+          description?: string | null;
+          slug?: string | null;
           status?: FormStatus;
-          fields?: Json;
+          draft_definition?: Json | null;
+          published_version_id?: string | null;
+          accepting_responses?: boolean | null;
           created_at?: string;
           updated_at?: string;
-          published_at?: string | null;
         };
         Update: {
           id?: string;
           user_id?: string;
+          owner_id?: string | null;
           title?: string;
-          description?: string;
+          description?: string | null;
+          slug?: string | null;
           status?: FormStatus;
-          fields?: Json;
+          draft_definition?: Json | null;
+          published_version_id?: string | null;
+          accepting_responses?: boolean | null;
           created_at?: string;
           updated_at?: string;
-          published_at?: string | null;
+        };
+        Relationships: [];
+      };
+      form_versions: {
+        Row: {
+          id: string;
+          form_id: string;
+          version_number: number;
+          definition: Json;
+          created_at: string;
+          created_by: string;
+        };
+        Insert: {
+          id?: string;
+          form_id: string;
+          version_number: number;
+          definition: Json;
+          created_at?: string;
+          created_by: string;
+        };
+        Update: {
+          id?: string;
+          form_id?: string;
+          version_number?: number;
+          definition?: Json;
+          created_at?: string;
+          created_by?: string;
+        };
+        Relationships: [];
+      };
+      form_responses: {
+        Row: {
+          id: string;
+          form_id: string;
+          form_version_id: string;
+          answers: Json;
+          respondent_name: string | null;
+          respondent_email: string | null;
+          submitted_at: string;
+        };
+        Insert: {
+          id?: string;
+          form_id: string;
+          form_version_id: string;
+          answers?: Json;
+          respondent_name?: string | null;
+          respondent_email?: string | null;
+          submitted_at?: string;
+        };
+        Update: {
+          id?: string;
+          form_id?: string;
+          form_version_id?: string;
+          answers?: Json;
+          respondent_name?: string | null;
+          respondent_email?: string | null;
+          submitted_at?: string;
         };
         Relationships: [];
       };

@@ -15,13 +15,39 @@ export type FormField = {
   required: boolean;
 };
 
+export type FormSettings = {
+  presentation: {
+    mode: "form" | "slideshow";
+  };
+  respondentAccess: {
+    login: "required" | "optional" | "none";
+    oneResponsePerAccount: boolean;
+  };
+};
+
+export type FormDefinition = {
+  schemaVersion: 1;
+  settings: FormSettings;
+  blocks: Array<{
+    id: string;
+    type: "question";
+    label: string;
+    kind: FormFieldType;
+    required: boolean;
+  }>;
+};
+
 export type FormRecord = {
   id: string;
+  owner_id?: string | null;
   title: string;
-  description: string;
+  description: string | null;
+  slug?: string | null;
   status: FormStatus;
+  draft_definition?: FormDefinition | null;
+  published_version_id?: string | null;
+  accepting_responses?: boolean | null;
   fields: FormField[];
   created_at: string;
   updated_at: string;
-  published_at: string | null;
 };

@@ -4,9 +4,7 @@ import { isAuthorizedDashboardUser } from "@/lib/supabase/admin-config";
 
 function getSupabaseEnv() {
   const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL ??
-    process.env.SUPABASE_URL ??
-    "";
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
 
   const anonKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 
 function LoginForm() {
   const router = useRouter();
@@ -49,14 +50,14 @@ function LoginForm() {
           {error && <p className="auth-message auth-error">{error}</p>}
 
           <div className="auth-actions auth-actions-vertical">
-            <button
+            <Button
               type="button"
               className="button button-primary"
               onClick={handleGoogleSignIn}
               disabled={loading}
             >
               {loading ? "Redirecting to Google..." : "Continue with Google"}
-            </button>
+            </Button>
           </div>
 
           <div className="auth-footer">

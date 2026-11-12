@@ -2,8 +2,22 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { FormRecord } from "@/lib/forms/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 type FormTab = "active" | "drafts";
 
@@ -27,24 +41,11 @@ export function FormsManager({
   const [description, setDescription] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setForms(initialForms);
   }, [initialForms]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    if (modalOpen && !dialog.open) {
-      dialog.showModal();
-      nameInputRef.current?.focus();
-    } else if (!modalOpen && dialog.open) {
-      dialog.close();
-    }
-  }, [modalOpen]);
 
   const visibleForms = forms.filter((form) => {
     if (activeTab === "drafts") return form.status === "draft";
@@ -61,6 +62,15 @@ export function FormsManager({
     setError("");
     setFormName("");
     setDescription("");
+  };
+
+  const handleModalChange = (open: boolean) => {
+    if (open) {
+      setError("");
+      setModalOpen(true);
+    } else {
+      closeModal();
+    }
   };
 
   const createForm = async (event: FormEvent<HTMLFormElement>) => {
@@ -97,6 +107,7 @@ export function FormsManager({
   const refreshForms = () => router.refresh();
 
   return (
+    <Dialog open={modalOpen} onOpenChange={handleModalChange}>
     <div className="forms-workspace">
       <header className="dashboard-page-header forms-page-header">
         <div>
@@ -106,7 +117,7 @@ export function FormsManager({
             Build and manage forms in one place.
           </p>
         </div>
-        <button
+        <Button
           type="button"
           className="dashboard-primary-button"
           onClick={() => {
@@ -116,34 +127,44 @@ export function FormsManager({
         >
           <span aria-hidden="true">+</span>
           Create form
-        </button>
+        </Button>
       </header>
 
       {initialError && (
         <div className="dashboard-alert" role="alert">
           <span>{initialError}</span>
-          <button type="button" onClick={refreshForms}>
+          <Button
+            type="button"
+            variant="outline"
+            className="dashboard-secondary-button"
+            onClick={refreshForms}
+          >
             Retry
-          </button>
+          </Button>
         </div>
       )}
 
       <section className="forms-section" aria-label="Forms">
         <div className="forms-toolbar">
-          <div className="forms-tabs" role="group" aria-label="Filter forms by status">
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => {
+              if (value === "active" || value === "drafts") setActiveTab(value);
+            }}
+          >
+          <TabsList className="forms-tabs" variant="line" aria-label="Filter forms by status">
             {tabs.map((tab) => (
-              <button
+              <TabsTrigger
                 key={tab.id}
-                type="button"
-                aria-pressed={activeTab === tab.id}
-                className={`forms-tab ${activeTab === tab.id ? "is-active" : ""}`}
-                onClick={() => setActiveTab(tab.id)}
+                value={tab.id}
+                className="forms-tab"
               >
                 {tab.label}
                 <span>{counts[tab.id]}</span>
-              </button>
+              </TabsTrigger>
             ))}
-          </div>
+          </TabsList>
+          </Tabs>
           <span className="forms-count">
             {visibleForms.length} {visibleForms.length === 1 ? "form" : "forms"}
           </span>
@@ -152,12 +173,15 @@ export function FormsManager({
         {visibleForms.length > 0 ? (
           <div className="forms-grid">
             {visibleForms.map((form) => (
-              <article className="form-card" key={form.id}>
+              <Card className="form-card ring-0" key={form.id}>
                 <div className="form-card-top">
-                  <span className={`form-status is-${form.status}`}>
+                  <Badge
+                    variant={form.status === "published" ? "default" : "secondary"}
+                    className={`form-status is-${form.status}`}
+                  >
                     <span aria-hidden="true" />
                     {form.status}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="form-card-copy">
                   <h2>{form.title}</h2>
@@ -165,11 +189,13 @@ export function FormsManager({
                 </div>
                 <div className="form-card-footer">
                   <span>{form.fields.length} questions</span>
-                  <Link href={`/form/${form.id}/edit`} className="form-card-link">
-                    Edit form <span aria-hidden="true">→</span>
-                  </Link>
+                  <Button asChild variant="link" className="form-card-link">
+                    <Link href={`/form/${form.id}/edit`}>
+                      Edit form <span aria-hidden="true">→</span>
+                    </Link>
+                  </Button>
                 </div>
-              </article>
+              </Card>
             ))}
           </div>
         ) : (
@@ -186,47 +212,52 @@ export function FormsManager({
                 : "Publish a form to make it active in your workspace."}
             </p>
             {activeTab === "drafts" && (
-              <button
+              <Button
                 type="button"
                 className="dashboard-primary-button"
                 onClick={() => setModalOpen(true)}
               >
                 Create a form
-              </button>
+              </Button>
             )}
           </div>
         )}
       </section>
 
-      <dialog
-        ref={dialogRef}
+      <DialogContent
         className="create-form-dialog"
-        aria-labelledby="create-form-title"
-        onCancel={(event) => {
+        showCloseButton={false}
+        onOpenAutoFocus={(event) => {
           event.preventDefault();
-          closeModal();
+          nameInputRef.current?.focus();
         }}
-        onClose={() => setModalOpen(false)}
       >
-        <div className="create-form-dialog-header">
+        <DialogHeader className="create-form-dialog-header">
           <div>
             <p className="dashboard-eyebrow">New workspace item</p>
-            <h2 id="create-form-title">Create a form</h2>
+            <DialogTitle id="create-form-title">Create a form</DialogTitle>
           </div>
-          <button
-            type="button"
-            className="dialog-close-button"
-            aria-label="Close dialog"
-            onClick={closeModal}
-          >
-            ×
-          </button>
-        </div>
+          <DialogClose asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="dialog-close-button"
+              aria-label="Close dialog"
+              disabled={creating}
+            >
+              ×
+            </Button>
+          </DialogClose>
+        </DialogHeader>
 
         <form className="create-form-form" onSubmit={createForm}>
-          <label>
-            Form name <span aria-hidden="true">*</span>
-            <input
+          <div className="form-dialog-field">
+            <Label htmlFor="create-form-name">
+              Form name <span aria-hidden="true">*</span>
+            </Label>
+            <Input
+              id="create-form-name"
               ref={nameInputRef}
               value={formName}
               onChange={(event) => setFormName(event.target.value)}
@@ -234,17 +265,20 @@ export function FormsManager({
               placeholder="e.g. Customer feedback"
               required
             />
-          </label>
-          <label>
-            Description <span className="form-optional">Optional</span>
-            <textarea
+          </div>
+          <div className="form-dialog-field">
+            <Label htmlFor="create-form-description">
+              Description <span className="form-optional">Optional</span>
+            </Label>
+            <Textarea
+              id="create-form-description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               maxLength={2000}
               rows={3}
               placeholder="What is this form for?"
             />
-          </label>
+          </div>
           <div className="draft-note">
             <span className="draft-note-dot" aria-hidden="true" />
             This form will be created as a draft. You can publish it from the editor.
@@ -257,24 +291,26 @@ export function FormsManager({
           )}
 
           <div className="create-form-actions">
-            <button
+            <Button
               type="button"
+              variant="outline"
               className="dashboard-secondary-button"
               onClick={closeModal}
               disabled={creating}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               className="dashboard-primary-button"
               disabled={creating || !formName.trim()}
             >
               {creating ? "Creating…" : "Create draft"}
-            </button>
+            </Button>
           </div>
         </form>
-      </dialog>
+      </DialogContent>
     </div>
+    </Dialog>
   );
 }

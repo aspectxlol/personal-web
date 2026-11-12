@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 
 const navigation = [
   { href: "/dashboard", label: "Overview" },
@@ -78,14 +79,15 @@ export function DashboardNav({
               {signOutError}
             </p>
           )}
-          <button
+          <Button
             type="button"
+            variant="outline"
             className="dashboard-signout"
             onClick={handleSignOut}
             disabled={signingOut}
           >
             {signingOut ? "Signing out…" : "Sign out"}
-          </button>
+          </Button>
         </div>
       </aside>
       <main className="dashboard-main">{children}</main>

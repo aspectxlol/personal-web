@@ -2,14 +2,39 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type DragEvent } from "react";
 import {
   FORM_FIELD_TYPES,
+  type FormSettings,
   type FormField,
   type FormFieldType,
   type FormRecord,
   type FormStatus,
 } from "@/lib/forms/types";
+import { defaultFormSettings } from "@/lib/forms/validation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 const fieldLabels: Record<FormFieldType, string> = {
   short_text: "Short answer",
@@ -18,12 +43,73 @@ const fieldLabels: Record<FormFieldType, string> = {
   checkbox: "Checkbox",
 };
 
+type FormSettingsPatch = {
+  presentation?: Partial<FormSettings["presentation"]>;
+  respondentAccess?: Partial<FormSettings["respondentAccess"]>;
+};
+
+function QuestionTypeMenu({
+  label,
+  onSelect,
+  variant = "secondary",
+}: {
+  label: string;
+  onSelect: (type: FormFieldType) => void;
+  variant?: "primary" | "secondary";
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant={variant === "primary" ? "default" : "outline"}
+          className="question-type-trigger"
+        >
+          <span aria-hidden="true">+</span>
+          {label}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="question-type-options">
+        <DropdownMenuLabel>Choose question type</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {FORM_FIELD_TYPES.map((type) => (
+          <DropdownMenuItem
+            key={type}
+            onSelect={() => onSelect(type)}
+          >
+            {fieldLabels[type]}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
   const router = useRouter();
   const [form, setForm] = useState(initialForm);
+  const [settings, setSettings] = useState(
+    initialForm.draft_definition?.settings ?? defaultFormSettings,
+  );
+  const [acceptingResponses, setAcceptingResponses] = useState(
+    initialForm.accepting_responses ?? true,
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [draggedFieldId, setDraggedFieldId] = useState<string | null>(null);
+
+  const updateSettings = (patch: FormSettingsPatch) => {
+    setSettings((current) => ({
+      ...current,
+      ...patch,
+      presentation: patch.presentation
+        ? { ...current.presentation, ...patch.presentation }
+        : current.presentation,
+      respondentAccess: patch.respondentAccess
+        ? { ...current.respondentAccess, ...patch.respondentAccess }
+        : current.respondentAccess,
+    }));
+  };
 
   const updateField = (id: string, patch: Partial<FormField>) => {
     setForm((current) => ({
@@ -53,6 +139,37 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
     setNotice("");
   };
 
+  const reorderField = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    setForm((current) => {
+      const sourceIndex = current.fields.findIndex((field) => field.id === sourceId);
+      const targetIndex = current.fields.findIndex((field) => field.id === targetId);
+      if (sourceIndex < 0 || targetIndex < 0) return current;
+
+      const fields = [...current.fields];
+      const [moved] = fields.splice(sourceIndex, 1);
+      fields.splice(targetIndex, 0, moved);
+      return { ...current, fields };
+    });
+    setNotice("");
+  };
+
+  const moveField = (id: string, offset: -1 | 1) => {
+    const index = form.fields.findIndex((field) => field.id === id);
+    const target = form.fields[index + offset];
+    if (target) reorderField(id, target.id);
+  };
+
+  const handleFieldDrop = (
+    event: DragEvent<HTMLElement>,
+    targetId: string,
+  ) => {
+    event.preventDefault();
+    const sourceId = event.dataTransfer.getData("text/plain");
+    if (sourceId) reorderField(sourceId, targetId);
+    setDraggedFieldId(null);
+  };
+
   const save = async (status: FormStatus = form.status) => {
     setSaving(true);
     setError("");
@@ -63,11 +180,15 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
         title: string;
         description: string;
         fields: FormField[];
+        settings: FormSettings;
+        accepting_responses: boolean;
         status?: FormStatus;
       } = {
         title: form.title,
-        description: form.description,
+        description: form.description ?? "",
         fields: form.fields,
+        settings,
+        accepting_responses: acceptingResponses,
       };
       if (status !== form.status) updates.status = status;
 
@@ -87,6 +208,10 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
       }
 
       setForm(result.form);
+      setSettings(
+        result.form.draft_definition?.settings ?? defaultFormSettings,
+      );
+      setAcceptingResponses(result.form.accepting_responses ?? true);
       setNotice(status === "published" ? "Form published." : "Changes saved.");
       setSaving(false);
       router.refresh();
@@ -108,7 +233,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
             <span aria-hidden="true">←</span> Forms
           </Link>
           <div className="form-editor-title-row">
-            <input
+            <Input
               aria-label="Form name"
               className="form-editor-title-input"
               value={form.title}
@@ -117,10 +242,10 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
               }
               maxLength={120}
             />
-            <span className={`form-status is-${form.status}`}>
+            <Badge variant={form.status === "published" ? "default" : "secondary"} className="form-status">
               <span aria-hidden="true" />
               {form.status}
-            </span>
+            </Badge>
           </div>
           <p className="dashboard-page-description">
             Edit questions and settings. Changes stay private until you publish.
@@ -128,17 +253,17 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
         </div>
         <div className="form-editor-actions">
           {notice && <span className="form-editor-notice" role="status">{notice}</span>}
-          <button
+          <Button
             type="button"
-            className="dashboard-secondary-button"
+            variant="outline"
             onClick={() => void save()}
             disabled={saving}
           >
             {saving ? "Saving…" : "Save changes"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={form.status === "published" ? "dashboard-secondary-button" : "dashboard-primary-button"}
+            variant={form.status === "published" ? "outline" : "default"}
             onClick={togglePublish}
             disabled={
               saving ||
@@ -151,7 +276,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
               : form.status === "published"
                 ? "Unpublish"
                 : "Publish form"}
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -174,82 +299,115 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
               <p className="dashboard-eyebrow">Form builder</p>
               <h2 id="questions-heading">Questions</h2>
             </div>
-            <label className="dashboard-secondary-button form-add-select">
-              <span aria-hidden="true">+</span> Add question
-              <select
-                aria-label="Choose a question type to add"
-                value=""
-                onChange={(event) => {
-                  if (event.target.value) addField(event.target.value as FormFieldType);
-                }}
-              >
-                <option value="" disabled>
-                  Choose question type
-                </option>
-                {FORM_FIELD_TYPES.map((type) => (
-                  <option value={type} key={type}>
-                    {fieldLabels[type]}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <QuestionTypeMenu label="Add question" onSelect={addField} />
           </div>
 
           {form.fields.length > 0 ? (
             <div className="form-field-list">
               {form.fields.map((field, index) => (
-                <article className="form-field-card" key={field.id}>
-                  <div className="form-field-index">{String(index + 1).padStart(2, "0")}</div>
+                <Card
+                  className={`form-field-card ${draggedFieldId === field.id ? "is-dragging" : ""}`}
+                  key={field.id}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => handleFieldDrop(event, field.id)}
+                >
+                  <div className="form-field-controls">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="form-field-drag-handle"
+                      draggable
+                      aria-label={`Drag to reorder ${field.label}`}
+                      title="Drag to reorder"
+                      onDragStart={(event) => {
+                        event.dataTransfer.setData("text/plain", field.id);
+                        event.dataTransfer.effectAllowed = "move";
+                        setDraggedFieldId(field.id);
+                      }}
+                      onDragEnd={() => setDraggedFieldId(null)}
+                    >
+                      <span aria-hidden="true">⠿</span>
+                    </Button>
+                    <span className="form-field-index">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div className="form-field-move-buttons">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label={`Move ${field.label} up`}
+                        disabled={index === 0}
+                        onClick={() => moveField(field.id, -1)}
+                      >
+                        ↑
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label={`Move ${field.label} down`}
+                        disabled={index === form.fields.length - 1}
+                        onClick={() => moveField(field.id, 1)}
+                      >
+                        ↓
+                      </Button>
+                    </div>
+                  </div>
                   <div className="form-field-content">
                     <div className="form-field-topline">
                       <span>{fieldLabels[field.type]}</span>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         className="form-field-delete"
                         onClick={() => removeField(field.id)}
                         aria-label={`Remove ${field.label}`}
                       >
                         Remove
-                      </button>
+                      </Button>
                     </div>
-                    <label className="form-field-label">
-                      Question label
-                      <input
+                    <div className="form-field-label">
+                      <Label htmlFor={`question-${field.id}`}>Question label</Label>
+                      <Input
+                        id={`question-${field.id}`}
                         value={field.label}
                         onChange={(event) =>
                           updateField(field.id, { label: event.target.value })
                         }
                         maxLength={120}
                       />
-                    </label>
+                    </div>
                     <div className="form-field-preview">
                       {field.type === "checkbox" ? (
-                        <label className="form-checkbox-preview">
-                          <input type="checkbox" disabled />
+                        <div className="form-checkbox-preview">
+                          <Checkbox disabled aria-hidden="true" />
                           {field.label || "Checkbox option"}
-                        </label>
+                        </div>
                       ) : field.type === "long_text" ? (
-                        <textarea disabled placeholder="Long answer" rows={3} />
+                        <Textarea disabled placeholder="Long answer" rows={3} />
                       ) : (
-                        <input
+                        <Input
                           disabled
                           type={field.type === "email" ? "email" : "text"}
                           placeholder={field.type === "email" ? "name@example.com" : "Short answer"}
                         />
                       )}
                     </div>
-                    <label className="form-required-toggle">
-                      <input
-                        type="checkbox"
+                    <div className="form-required-toggle">
+                      <Checkbox
+                        id={`required-${field.id}`}
                         checked={field.required}
-                        onChange={(event) =>
-                          updateField(field.id, { required: event.target.checked })
+                        onCheckedChange={(checked) =>
+                          updateField(field.id, { required: checked === true })
                         }
                       />
-                      Required question
-                    </label>
+                      <Label htmlFor={`required-${field.id}`}>Required question</Label>
+                    </div>
                   </div>
-                </article>
+                </Card>
               ))}
             </div>
           ) : (
@@ -257,21 +415,11 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
               <span className="forms-empty-icon" aria-hidden="true">＋</span>
               <h3>Start with a question</h3>
               <p>Add a question to begin building your form.</p>
-              <label className="dashboard-primary-button form-add-select">
-                Add your first question
-                <select
-                  aria-label="Choose the first question type"
-                  value=""
-                  onChange={(event) => {
-                    if (event.target.value) addField(event.target.value as FormFieldType);
-                  }}
-                >
-                  <option value="" disabled>Choose question type</option>
-                  {FORM_FIELD_TYPES.map((type) => (
-                    <option value={type} key={type}>{fieldLabels[type]}</option>
-                  ))}
-                </select>
-              </label>
+              <QuestionTypeMenu
+                label="Add your first question"
+                variant="primary"
+                onSelect={addField}
+              />
             </div>
           )}
         </section>
@@ -281,10 +429,11 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
             <p className="dashboard-eyebrow">Configuration</p>
             <h2 id="settings-heading">Form settings</h2>
           </div>
-          <label>
-            Description
-            <textarea
-              value={form.description}
+          <div className="form-settings-field">
+            <Label htmlFor="form-description">Description</Label>
+            <Textarea
+              id="form-description"
+              value={form.description ?? ""}
               onChange={(event) =>
                 setForm((current) => ({ ...current, description: event.target.value }))
               }
@@ -292,14 +441,99 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
               maxLength={2000}
               placeholder="Tell people what this form is about."
             />
-          </label>
+          </div>
+          <div className="form-settings-group">
+            <p className="form-settings-group-title">Form experience</p>
+            <div className="form-settings-field">
+              <Label htmlFor="form-presentation">Presentation</Label>
+              <Select
+                value={settings.presentation.mode}
+                onValueChange={(mode) =>
+                  updateSettings({
+                    presentation: {
+                      mode: mode === "slideshow" ? "slideshow" : "form",
+                    },
+                  })
+                }
+              >
+                <SelectTrigger id="form-presentation" className="form-settings-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="form">All questions on one page</SelectItem>
+                  <SelectItem value="slideshow">One question at a time</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="form-settings-group">
+            <p className="form-settings-group-title">Respondents</p>
+            <div className="form-settings-field">
+              <Label htmlFor="respondent-login">Sign-in access</Label>
+              <Select
+                value={settings.respondentAccess.login}
+                disabled={
+                  settings.respondentAccess.oneResponsePerAccount
+                }
+                onValueChange={(login) =>
+                  updateSettings({
+                    respondentAccess: {
+                      login:
+                        login === "required" || login === "optional"
+                          ? login
+                          : "none",
+                    },
+                  })
+                }
+              >
+                <SelectTrigger id="respondent-login" className="form-settings-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="required">Require login</SelectItem>
+                  <SelectItem value="optional">Login optional</SelectItem>
+                  <SelectItem value="none">No login</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Label htmlFor="one-response-per-account" className="form-settings-toggle">
+              <Switch
+                id="one-response-per-account"
+                checked={settings.respondentAccess.oneResponsePerAccount}
+                onCheckedChange={(checked) =>
+                  updateSettings({
+                    respondentAccess: {
+                      oneResponsePerAccount: checked,
+                      ...(checked ? { login: "required" } : {}),
+                    },
+                  })
+                }
+              />
+              One response per account
+            </Label>
+            <p className="form-settings-help">
+              {settings.respondentAccess.oneResponsePerAccount
+                ? "Login is required for this setting. Submission rules are not enforced by a public response flow yet."
+                : "These access settings are saved for the public response flow, which is not available yet."}
+            </p>
+            <Label htmlFor="accepting-responses" className="form-settings-toggle">
+              <Switch
+                id="accepting-responses"
+                checked={acceptingResponses}
+                onCheckedChange={setAcceptingResponses}
+              />
+              Accepting responses
+            </Label>
+          </div>
           <div className="form-settings-status">
             <span>Status</span>
             <strong>{form.status === "published" ? "Active" : "Draft"}</strong>
             <p>
               {form.status === "draft"
                 ? "Only you can see this draft. Publish when it is ready."
-                : "This form is published and available to fill out."}
+                : acceptingResponses
+                  ? "This form is published. Public submissions are not available yet."
+                  : "This form is published but response collection is turned off."}
             </p>
           </div>
         </aside>

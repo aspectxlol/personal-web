@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import type { Project } from "@/lib/data";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function ProjectCard({
   project,
@@ -13,13 +16,14 @@ export default function ProjectCard({
 }) {
   return (
     <motion.div
-      className="neumorphic p-6 group"
+      className="group"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98, y: 0 }}
     >
+      <Card className="neumorphic p-6 ring-0">
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="space-y-2">
@@ -36,12 +40,13 @@ export default function ProjectCard({
               {project.description}
             </motion.p>
           </div>
-          <motion.span
-            className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full neumorphic text-muted-foreground"
+          <motion.div
             whileHover={{ scale: 1.05 }}
           >
-            {project.status}
-          </motion.span>
+            <Badge variant="outline" className="neumorphic text-muted-foreground">
+              {project.status}
+            </Badge>
+          </motion.div>
         </div>
 
         <motion.div
@@ -51,13 +56,14 @@ export default function ProjectCard({
           transition={{ duration: 0.3, delay: 0.2 + index * 0.1 }}
         >
           {project.technologies.map((tech) => (
-            <motion.span
+            <motion.div
               key={tech}
-              className="inline-flex items-center px-2 py-1 text-xs rounded-md neumorphic text-muted-foreground"
               whileHover={{ scale: 1.05, color: "var(--color-primary)" }}
             >
-              {tech}
-            </motion.span>
+              <Badge variant="secondary" className="neumorphic text-muted-foreground">
+                {tech}
+              </Badge>
+            </motion.div>
           ))}
         </motion.div>
 
@@ -68,11 +74,11 @@ export default function ProjectCard({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
           >
+            <Button asChild variant="link" className="project-repository-link">
             <Link
               href={project.repository}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
             >
               <motion.svg
                 className="h-4 w-4"
@@ -93,9 +99,11 @@ export default function ProjectCard({
               </motion.svg>
               <motion.span whileHover={{ x: 2 }}>View Repository</motion.span>
             </Link>
+            </Button>
           </motion.div>
         )}
       </div>
+      </Card>
     </motion.div>
   );
 }

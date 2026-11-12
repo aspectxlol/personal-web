@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export function AuthStatus() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -83,13 +84,18 @@ export function AuthStatus() {
     return (
       <div className="header-auth-menu">
         {canAccessDashboard && (
-          <Link href="/dashboard" className="header-availability">
-            Dashboard
-          </Link>
+          <Button asChild variant="link" className="header-availability">
+            <Link href="/dashboard">Dashboard</Link>
+          </Button>
         )}
-        <button type="button" className="header-auth-button" onClick={handleSignOut}>
+        <Button
+          type="button"
+          variant="outline"
+          className="header-auth-button"
+          onClick={handleSignOut}
+        >
           Sign out
-        </button>
+        </Button>
         {accessCheckFailed && (
           <span className="header-auth-status" role="status">
             Dashboard access unavailable
@@ -100,8 +106,8 @@ export function AuthStatus() {
   }
 
   return (
-    <Link href="/auth/login" className="header-availability">
-      Sign in
-    </Link>
+    <Button asChild variant="link" className="header-availability">
+      <Link href="/auth/login">Sign in</Link>
+    </Button>
   );
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminContext } from "@/lib/supabase/admin";
-import { toFormRecord } from "@/lib/forms/validation";
+import { buildDraftDefinition, toFormRecord } from "@/lib/forms/validation";
 
 export async function GET() {
   const admin = await requireAdminContext();
@@ -54,10 +54,13 @@ export async function POST(request: Request) {
     .from("forms")
     .insert({
       user_id: admin.user.id,
+      owner_id: admin.user.id,
       title,
       description,
+      slug: `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "form"}-${Date.now()}`.slice(0, 80),
       status: "draft",
-      fields: [],
+      draft_definition: buildDraftDefinition([]),
+      accepting_responses: true,
     })
     .select("*")
     .single();

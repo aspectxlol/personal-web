@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
 // Load Manrope font with multiple weights
 const satoshi = Manrope({
@@ -113,7 +114,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${satoshi.variable} ${jetBrainsMono.variable} h-full`}
+      className={cn("h-full font-sans", satoshi.variable, jetBrainsMono.variable)}
     >
       <head>
         <script

@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { AuthStatus } from "@/components/AuthStatus";
 import { projects } from "@/lib/data";
+import { Button } from "@/components/ui/button";
 
 const reveal = {
   hidden: { opacity: 0, y: 24 },
@@ -124,22 +125,26 @@ function ProjectCarousel() {
           className="carousel-controls"
           aria-label="Project carousel controls"
         >
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             onClick={showPrevious}
             aria-label="Previous project"
             disabled={projectCount < 2}
           >
             ←
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             onClick={showNext}
             aria-label="Next project"
             disabled={projectCount < 2}
           >
             →
-          </button>
+          </Button>
         </div>
       </div>
       <div className="project-carousel-content">

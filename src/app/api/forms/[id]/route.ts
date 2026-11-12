@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import {
+  buildDraftDefinition,
   parseFormFieldList,
-  parseFormFields,
+  parseDraftDefinition,
+  parseFormSettings,
+  parseFormSettingsInput,
   toFormRecord,
-  toJsonFields,
 } from "@/lib/forms/validation";
-import type { FormField } from "@/lib/forms/types";
+import type { FormField, FormSettings } from "@/lib/forms/types";
 import type { Database } from "@/lib/supabase/database.types";
 import { requireAdminContext } from "@/lib/supabase/admin";
 
@@ -68,6 +70,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     updated_at: new Date().toISOString(),
   };
   let submittedFields: FormField[] | null = null;
+  let submittedSettings: FormSettings | null = null;
+  let publishedDefinition: ReturnType<typeof buildDraftDefinition> | null = null;
   let hasUpdate = false;
 
   if ("title" in input) {
@@ -86,14 +90,57 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     hasUpdate = true;
   }
 
+  if ("settings" in input) {
+    const settings = parseFormSettingsInput(input.settings);
+    if (!settings) {
+      return NextResponse.json({ error: "One or more form settings are invalid." }, { status: 400 });
+    }
+    submittedSettings = settings;
+    hasUpdate = true;
+  }
+
+  if ("accepting_responses" in input) {
+    if (typeof input.accepting_responses !== "boolean") {
+      return NextResponse.json({ error: "Response availability must be enabled or disabled." }, { status: 400 });
+    }
+    updates.accepting_responses = input.accepting_responses;
+    hasUpdate = true;
+  }
+
   if ("fields" in input) {
     const fields = parseFormFieldList(input.fields);
     if (!fields) {
       return NextResponse.json({ error: "One or more form fields are invalid." }, { status: 400 });
     }
     submittedFields = fields;
-    updates.fields = toJsonFields(fields);
+    updates.draft_definition = buildDraftDefinition(fields);
     hasUpdate = true;
+  }
+
+  if ("fields" in input || "settings" in input) {
+    let fields = submittedFields;
+    let settings = submittedSettings;
+    if (!fields || !settings) {
+      const { data, error } = await admin.supabase
+        .from("forms")
+        .select("draft_definition")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) {
+        return NextResponse.json({ error: "Could not load the current form definition." }, { status: 500 });
+      }
+      if (!data) {
+        return NextResponse.json({ error: "Form not found." }, { status: 404 });
+      }
+      fields ??= parseDraftDefinition(data.draft_definition);
+      settings ??= parseFormSettings(data.draft_definition);
+    }
+    if (settings.respondentAccess.oneResponsePerAccount) {
+      settings.respondentAccess.login = "required";
+    }
+    updates.draft_definition = buildDraftDefinition(fields, settings);
+    submittedFields = fields;
+    submittedSettings = settings;
   }
 
   if ("status" in input) {
@@ -101,16 +148,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Invalid form status." }, { status: 400 });
     }
     updates.status = input.status;
-    updates.published_at =
-      input.status === "published" ? new Date().toISOString() : null;
     hasUpdate = true;
 
     if (input.status === "published") {
       let fields = submittedFields;
-      if (!fields) {
+      let settings = submittedSettings;
+      if (!fields || !settings) {
         const { data, error } = await admin.supabase
           .from("forms")
-          .select("fields")
+          .select("draft_definition")
           .eq("id", id)
           .maybeSingle();
         if (error) {
@@ -119,14 +165,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         if (!data) {
           return NextResponse.json({ error: "Form not found." }, { status: 404 });
         }
-        try {
-          fields = parseFormFields(data.fields);
-        } catch {
-          return NextResponse.json(
-            { error: "Saved form data is invalid. Review this form's fields." },
-            { status: 500 }
-          );
-        }
+        fields ??= parseDraftDefinition(data.draft_definition);
+        settings ??= parseFormSettings(data.draft_definition);
       }
 
       if (fields.length === 0) {
@@ -135,11 +175,49 @@ export async function PATCH(request: Request, { params }: RouteContext) {
           { status: 400 }
         );
       }
+      publishedDefinition = buildDraftDefinition(fields, settings);
     }
   }
 
   if (!hasUpdate) {
     return NextResponse.json({ error: "No form changes were provided." }, { status: 400 });
+  }
+
+  if (publishedDefinition) {
+    const { data: latestVersion, error: versionLookupError } = await admin.supabase
+      .from("form_versions")
+      .select("version_number")
+      .eq("form_id", id)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (versionLookupError) {
+      return NextResponse.json(
+        { error: "Could not determine the next published version." },
+        { status: 500 }
+      );
+    }
+
+    const { data: version, error: versionInsertError } = await admin.supabase
+      .from("form_versions")
+      .insert({
+        form_id: id,
+        version_number: (latestVersion?.version_number ?? 0) + 1,
+        definition: publishedDefinition,
+        created_by: admin.user.id,
+      })
+      .select("id")
+      .single();
+
+    if (versionInsertError) {
+      return NextResponse.json(
+        { error: "Could not create a published form version." },
+        { status: 500 }
+      );
+    }
+
+    updates.published_version_id = version.id;
   }
 
   const { data, error } = await admin.supabase
