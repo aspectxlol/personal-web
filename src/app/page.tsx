@@ -89,11 +89,11 @@ function DevQuoteSection() {
   }, []);
 
   return (
-    <section className="statement section-shell">
+    <section className="mx-auto flex min-h-dvh w-[min(1320px,calc(100%-48px))] flex-col justify-center border-t border-[var(--line)] py-[150px] max-[767px]:w-[min(100%-32px,1320px)] max-[767px]:py-[92px]">
       <Reveal>
-        <p className="eyebrow">A developer thought</p>
-        <p className="statement-text">&ldquo;{quote.quote}&rdquo;</p>
-        <p className="quote-author">- {quote.author}</p>
+        <p className="mb-[22px] font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">A developer thought</p>
+        <p className="m-0 max-w-[950px] text-[clamp(2rem,4.5vw,4.8rem)] leading-[.98] font-semibold tracking-[-.065em]">&ldquo;{quote.quote}&rdquo;</p>
+        <p className="mt-7 mb-0 font-mono text-[.72rem] tracking-[.08em] text-accent uppercase">- {quote.author}</p>
       </Reveal>
     </section>
   );
@@ -115,20 +115,21 @@ function ProjectCarousel() {
   };
 
   return (
-    <Reveal className="project-carousel" delay={0.1}>
-      <div className="project-carousel-top">
-        <p className="project-number">
+    <Reveal className="flex h-[430px] flex-col justify-between overflow-hidden border border-[var(--line)] bg-[var(--paper-deep)] p-[clamp(28px,5vw,72px)] max-[767px]:h-[460px] max-[767px]:p-6" delay={0.1}>
+      <div className="flex items-center justify-between gap-5">
+        <p className="mb-[22px] font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">
           {String(activeIndex + 1).padStart(2, "0")} /{" "}
           {String(projectCount).padStart(2, "0")}
         </p>
         <div
-          className="carousel-controls"
+          className="flex gap-2"
           aria-label="Project carousel controls"
         >
           <Button
             type="button"
             variant="outline"
             size="icon"
+            className="size-10 rounded-none border border-[var(--line)] bg-transparent text-[1.1rem] text-ink transition-[background-color,color,transform] duration-150 hover:border-[var(--ink)] hover:bg-[var(--ink)] hover:text-paper active:scale-[.96] disabled:cursor-not-allowed disabled:opacity-35"
             onClick={showPrevious}
             aria-label="Previous project"
             disabled={projectCount < 2}
@@ -139,6 +140,7 @@ function ProjectCarousel() {
             type="button"
             variant="outline"
             size="icon"
+            className="size-10 rounded-none border border-[var(--line)] bg-transparent text-[1.1rem] text-ink transition-[background-color,color,transform] duration-150 hover:border-[var(--ink)] hover:bg-[var(--ink)] hover:text-paper active:scale-[.96] disabled:cursor-not-allowed disabled:opacity-35"
             onClick={showNext}
             aria-label="Next project"
             disabled={projectCount < 2}
@@ -147,14 +149,14 @@ function ProjectCarousel() {
           </Button>
         </div>
       </div>
-      <div className="project-carousel-content">
+      <div className="grid h-[220px] flex-[0_0_220px] grid-cols-[minmax(0,1.35fr)_minmax(180px,.65fr)] items-end gap-12 max-[767px]:grid-cols-1 max-[767px]:gap-[30px] max-[767px]:[height:250px] max-[767px]:flex-[0_0_250px]">
         <div>
-          <p className="project-status">{project.status}</p>
-          <h3>{project.title}</h3>
-          <p className="project-description">{project.description}</p>
+          <p className="mb-4 font-mono text-[.68rem] tracking-[.08em] text-accent uppercase">{project.status}</p>
+          <h3 className="mb-4 text-[clamp(2.5rem,5vw,5.5rem)] leading-[.88]">{project.title}</h3>
+          <p className="m-0 max-w-[52ch] text-base leading-[1.6] text-ink-soft">{project.description}</p>
         </div>
-        <div className="project-meta">
-          <span>Stack</span>
+        <div className="mt-0 grid grid-cols-[72px_1fr] gap-x-[18px] gap-y-[10px] border-t border-[var(--line)] pt-[18px] font-mono text-[.66rem] leading-[1.5]">
+          <span className="text-ink-soft uppercase">Stack</span>
           <strong>{project.technologies.join(" / ")}</strong>
         </div>
       </div>
@@ -163,7 +165,7 @@ function ProjectCarousel() {
           href={project.repository}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-link"
+          className="inline-flex items-center gap-3 self-start border-b border-[var(--ink)] pb-[5px] text-[.86rem] font-bold transition-colors hover:text-accent"
         >
           Open repository <ArrowUpRight />
         </a>
@@ -175,48 +177,48 @@ function ProjectCarousel() {
 export default function Page() {
   return (
     <main>
-      <header className="site-header">
-        <Link href="#top" className="brand-mark" aria-label="Louie Hansen home">
+      <header className="fixed top-0 left-1/2 z-20 flex min-h-[76px] w-full max-w-none -translate-x-1/2 items-center justify-between gap-6 border-b border-[var(--line)] bg-[var(--paper)] px-[max(24px,calc((100%-1320px)/2))] max-[767px]:min-h-[68px] max-[767px]:w-[min(100%-32px,1320px)]">
+        <Link href="#top" className="text-[1.35rem] font-extrabold tracking-[-.08em]" aria-label="Louie Hansen home">
           LH<span>.</span>
         </Link>
-        <nav aria-label="Main navigation" className="site-nav">
+        <nav aria-label="Main navigation" className="flex gap-[30px] font-mono text-[.7rem] tracking-[.12em] text-ink-soft uppercase max-[767px]:gap-[14px] max-[767px]:text-[.6rem] [&_a]:transition-colors [&_a:hover]:text-accent">
           <Link href="#work">Work</Link>
           <Link href="#about">About</Link>
           <Link href="#contact">Contact</Link>
         </nav>
-        <div className="header-actions">
+        <div className="flex items-center gap-4">
           <AuthStatus />
         </div>
       </header>
 
-      <section id="top" className="hero section-shell">
-        <div className="hero-copy">
-          <p className="eyebrow">Backend engineer / builder</p>
+      <section id="top" className="mx-auto grid min-h-dvh w-[min(1320px,calc(100%-48px))] grid-cols-[minmax(0,.93fr)_minmax(320px,.72fr)] items-center gap-[clamp(48px,9vw,150px)] pt-[140px] pb-[88px] max-[767px]:w-[min(100%-32px,1320px)] max-[767px]:grid-cols-1 max-[767px]:gap-[52px] max-[767px]:pt-28 max-[767px]:pb-[72px]">
+        <div className="pb-[7vh] max-[767px]:pb-0">
+          <p className="mb-[22px] font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">Backend engineer / builder</p>
           <h1>
             <em>Louie Hansen.</em>
           </h1>
-          <p className="hero-intro">
+          <p className="mb-9 max-w-[430px] text-[clamp(1.05rem,1.7vw,1.3rem)] leading-[1.45] text-ink-soft">
             Backend engineer building reliable software.
           </p>
-          <div className="hero-actions">
-            <Link href="#work" className="button button-primary group">
+          <div className="flex flex-wrap items-center gap-6">
+            <Link href="#work" className="group inline-flex items-center gap-3 border border-[var(--ink)] bg-[var(--ink)] px-[18px] py-[15px] text-[.86rem] font-bold text-paper transition-[transform,background-color,color] duration-150 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:bg-[var(--accent)] active:translate-y-px active:scale-[.98]">
               See selected work <ArrowUpRight />
             </Link>
-            <a href="mailto:louiehlinadi@gmail.com" className="text-link">
+            <a href="mailto:louiehlinadi@gmail.com" className="inline-flex items-center gap-3 border-b border-[var(--ink)] pb-[5px] text-[.86rem] font-bold transition-colors hover:text-accent">
               Start a conversation <ArrowUpRight />
             </a>
           </div>
         </div>
-        <Reveal className="hero-visual hero-signal" delay={0.2}>
-          <div className="signal-mark" aria-hidden="true">
+        <Reveal className="relative flex aspect-[.82] w-full max-h-[690px] items-center justify-center overflow-hidden border border-[var(--line)] bg-[linear-gradient(135deg,transparent_49.8%,var(--line)_50%,transparent_50.2%),linear-gradient(45deg,transparent_49.8%,var(--line)_50%,transparent_50.2%),var(--paper-deep)] after:pointer-events-none after:absolute after:inset-0 after:bg-[linear-gradient(180deg,transparent_55%,rgb(0_0_0_/_0.48))] after:content-[''] max-[767px]:max-h-none" delay={0.2}>
+          <div className="text-[clamp(5rem,12vw,11rem)] font-extrabold leading-[.8] tracking-[-.14em] text-accent" aria-hidden="true">
             LH
           </div>
-          <div className="signal-lines" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+          <div className="absolute top-[26%] right-[16%] left-[16%] grid gap-[9px]" aria-hidden="true">
+            <span className="block h-px bg-[var(--ink)] opacity-65" />
+            <span className="block h-px w-[68%] justify-self-end bg-[var(--ink)] opacity-65" />
+            <span className="block h-px w-[42%] justify-self-end bg-[var(--ink)] opacity-65" />
           </div>
-          <div className="hero-caption">
+          <div className="absolute right-5 bottom-[18px] left-5 z-[1] flex justify-between font-mono text-[.66rem] tracking-[.08em] text-[#f5f1e9] uppercase">
             <span>01</span>
             <span>Build / ship / learn</span>
           </div>
@@ -225,32 +227,32 @@ export default function Page() {
 
       <DevQuoteSection />
 
-      <section id="work" className="work section-shell">
-        <Reveal className="section-heading">
-          <p className="eyebrow">Selected work</p>
-          <h2>Small list. Serious intent.</h2>
+      <section id="work" className="mx-auto flex min-h-dvh w-[min(1320px,calc(100%-48px))] flex-col justify-center pt-16 pb-[140px] max-[767px]:w-[min(100%-32px,1320px)] max-[767px]:py-[88px]">
+        <Reveal className="mb-[60px] max-w-[580px] max-[767px]:mb-9">
+          <p className="mb-[22px] font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">Selected work</p>
+          <h2 className="mb-0 text-[clamp(2.5rem,5vw,5rem)] leading-[.94] font-semibold">Small list. Serious intent.</h2>
         </Reveal>
 
         <ProjectCarousel />
 
-        <div className="work-note">
+        <div className="mt-12 flex justify-between gap-5 border-t border-[var(--line)] pt-[18px] font-mono text-[.68rem] tracking-[.08em] text-ink-soft uppercase">
           <a
             href="https://github.com/aspectxlol"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-link"
+            className="inline-flex items-center gap-3 border-b border-[var(--ink)] pb-[5px] text-[.86rem] font-bold transition-colors hover:text-accent"
           >
             Browse GitHub <ArrowUpRight />
           </a>
         </div>
       </section>
 
-      <section className="capabilities section-shell">
-        <Reveal className="capabilities-intro">
-          <p className="eyebrow">What I bring</p>
-          <h2>From first commit to reliable release.</h2>
+      <section className="mx-auto grid min-h-dvh w-[min(1320px,calc(100%-48px))] grid-cols-[.85fr_1.15fr] content-center gap-[clamp(48px,10vw,180px)] border-t border-[var(--line)] py-[130px] max-[767px]:w-[min(100%-32px,1320px)] max-[767px]:grid-cols-1 max-[767px]:gap-[50px] max-[767px]:py-[88px]">
+        <Reveal className="self-start">
+          <p className="mb-[22px] font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">What I bring</p>
+          <h2 className="mb-0 text-[clamp(2.5rem,5vw,5rem)] leading-[.94] font-semibold">From first commit to reliable release.</h2>
         </Reveal>
-        <Reveal className="capability-list" delay={0.1}>
+        <Reveal className="border-t border-[var(--line)]" delay={0.1}>
           {[
             [
               "01",
@@ -268,11 +270,11 @@ export default function Page() {
               "Deployment, observability, and the practical work that keeps software moving.",
             ],
           ].map(([number, title, description]) => (
-            <article key={number} className="capability">
-              <span>{number}</span>
+            <article key={number} className="grid grid-cols-[42px_1fr_auto] items-start gap-[18px] border-b border-[var(--line)] py-6">
+              <span className="font-mono text-[.66rem] text-accent">{number}</span>
               <div>
-                <h3>{title}</h3>
-                <p>{description}</p>
+                <h3 className="mb-2 text-xl tracking-[-.04em]">{title}</h3>
+                <p className="mb-0 max-w-[42ch] leading-[1.55] text-ink-soft">{description}</p>
               </div>
               <ArrowUpRight />
             </article>
@@ -280,25 +282,25 @@ export default function Page() {
         </Reveal>
       </section>
 
-      <section id="about" className="about section-shell">
-        <Reveal className="about-image about-signal">
-          <span>Curiosity index</span>
-          <strong>
+      <section id="about" className="mx-auto grid min-h-dvh w-[min(1320px,calc(100%-48px))] grid-cols-[minmax(280px,.8fr)_minmax(0,1fr)] items-center gap-[clamp(48px,11vw,180px)] border-t border-[var(--line)] pt-[120px] pb-40 max-[767px]:w-[min(100%-32px,1320px)] max-[767px]:grid-cols-1 max-[767px]:gap-[46px] max-[767px]:py-[88px]">
+        <Reveal className="relative flex aspect-[.83] max-h-[620px] flex-col justify-between overflow-hidden border border-[var(--line)] bg-[linear-gradient(90deg,transparent_49.8%,var(--line)_50%,transparent_50.2%),var(--paper-deep)] p-7 max-[767px]:max-h-[480px]">
+          <span className="relative z-[1] font-mono text-[.68rem] tracking-[.08em] text-accent uppercase">Curiosity index</span>
+          <strong className="relative z-[1] text-[clamp(3rem,6vw,6.5rem)] leading-[.84] tracking-[-.09em] text-ink">
             Go deep.
             <br />
             Stay useful.
           </strong>
-          <small>backend / product / infrastructure</small>
+          <small className="relative z-[1] font-mono text-[.68rem] tracking-[.08em] text-accent uppercase">backend / product / infrastructure</small>
         </Reveal>
-        <Reveal className="about-copy" delay={0.15}>
-          <p className="eyebrow">A little context</p>
-          <h2>Curious enough to go deep.</h2>
-          <p>
+        <Reveal className="max-w-[530px]" delay={0.15}>
+          <p className="mb-[22px] font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">A little context</p>
+          <h2 className="mb-[34px] text-[clamp(2.5rem,5vw,5rem)] leading-[.94] font-semibold">Curious enough to go deep.</h2>
+          <p className="mb-[18px] max-w-[50ch] text-base leading-[1.6] text-ink-soft">
             I&apos;m an Informatics student at Universitas Bunda Mulia,
             interested in backend engineering, infrastructure, and the systems
             that make software work.
           </p>
-          <p>
+          <p className="mb-[18px] max-w-[50ch] text-base leading-[1.6] text-ink-soft">
             I care about understanding how things work under the hood, writing
             code that's easy to reason about, and building things that solve
             real problems. Sometimes that means keeping things simple. Sometimes
@@ -309,31 +311,31 @@ export default function Page() {
             href="https://linkedin.com/in/louie-hansen-linadi-aa4969290"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-link"
+            className="mt-[18px] inline-flex items-center gap-3 border-b border-[var(--ink)] pb-[5px] text-[.86rem] font-bold transition-colors hover:text-accent"
           >
             More on LinkedIn <ArrowUpRight />
           </a>
         </Reveal>
       </section>
 
-      <section id="contact" className="contact section-shell">
+      <section id="contact" className="mx-auto flex min-h-dvh w-[min(1320px,calc(100%-48px))] flex-col justify-center border-t border-[var(--line)] py-[130px] pb-[155px] max-[767px]:w-[min(100%-32px,1320px)] max-[767px]:py-[88px]">
         <Reveal>
-          <p className="eyebrow">Have a good problem?</p>
-          <h2>
+          <p className="mb-[22px] font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">Have a good problem?</p>
+          <h2 className="mb-12 text-[clamp(4rem,10vw,10.5rem)] leading-[.84] font-semibold tracking-[-.09em] max-[767px]:text-[clamp(4rem,17vw,7rem)]">
             Let&apos;s build
             <br />
             something <em>useful.</em>
           </h2>
           <a
             href="mailto:louiehlinadi@gmail.com"
-            className="contact-link group"
+            className="group inline-flex items-center gap-3 font-mono text-[clamp(.78rem,1.3vw,1rem)] tracking-[.02em] text-accent transition-colors hover:text-accent-dark"
           >
             louiehlinadi@gmail.com <ArrowUpRight />
           </a>
         </Reveal>
       </section>
 
-      <footer className="site-footer">
+      <footer className="mx-auto flex w-[min(1320px,calc(100%-48px))] justify-between gap-5 border-t border-[var(--line)] pt-6 pb-[34px] font-mono text-[.64rem] tracking-[.05em] text-ink-soft uppercase max-[767px]:w-[min(100%-32px,1320px)] max-[767px]:flex-wrap">
         <span>© {new Date().getFullYear()} Louie Hansen Linadi</span>
         <span>Built with Next.js and care.</span>
         <a href="#top">Back to top ↑</a>

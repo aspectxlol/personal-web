@@ -108,18 +108,18 @@ export function FormsManager({
 
   return (
     <Dialog open={modalOpen} onOpenChange={handleModalChange}>
-    <div className="forms-workspace">
-      <header className="dashboard-page-header forms-page-header">
+    <div className="mx-auto w-full max-w-[1320px]">
+      <header className="mb-8 flex items-center justify-between gap-7 max-[560px]:items-stretch max-[560px]:flex-col max-[560px]:gap-[18px]">
         <div>
-          <p className="dashboard-eyebrow">Workspace / Forms</p>
-          <h1>Your forms</h1>
-          <p className="dashboard-page-description">
+          <p className="mb-0 font-mono text-[.65rem] font-semibold tracking-[.11em] text-ink-soft uppercase">Workspace / Forms</p>
+          <h1 className="my-[10px] mb-[10px] text-[clamp(2.4rem,5vw,4rem)] font-bold leading-[.95] tracking-[-.075em] max-[560px]:text-[2.45rem]">Your forms</h1>
+          <p className="m-0 max-w-[58ch] text-[.92rem] leading-[1.55] text-ink-soft">
             Build and manage forms in one place.
           </p>
         </div>
         <Button
           type="button"
-          className="dashboard-primary-button"
+          className="inline-flex min-h-[42px] items-center justify-center gap-[9px] rounded-[3px] border border-[var(--ink)] bg-[var(--ink)] px-[15px] py-[10px] font-sans text-[.8rem] font-semibold text-paper transition-[transform,color,background-color,border-color] duration-150 hover:-translate-y-px hover:border-[var(--accent)] hover:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-55"
           onClick={() => {
             setError("");
             setModalOpen(true);
@@ -131,12 +131,12 @@ export function FormsManager({
       </header>
 
       {initialError && (
-        <div className="dashboard-alert" role="alert">
+        <div className="mb-5 flex items-center justify-between gap-4 border border-[color-mix(in_srgb,var(--accent)_40%,var(--line))] bg-[color-mix(in_srgb,var(--accent)_8%,var(--paper))] px-[15px] py-[13px] text-[.84rem] leading-[1.5] text-accent-dark" role="alert">
           <span>{initialError}</span>
           <Button
             type="button"
             variant="outline"
-            className="dashboard-secondary-button"
+            className="inline-flex min-h-[42px] items-center justify-center gap-[9px] rounded-[3px] border border-[var(--ink)] bg-transparent px-[15px] py-[10px] font-sans text-[.8rem] font-semibold text-ink transition-colors duration-150 hover:bg-[var(--paper-deep)] disabled:cursor-not-allowed disabled:opacity-55"
             onClick={refreshForms}
           >
             Retry
@@ -144,52 +144,52 @@ export function FormsManager({
         </div>
       )}
 
-      <section className="forms-section" aria-label="Forms">
-        <div className="forms-toolbar">
+      <section className="border-t border-[var(--line)]" aria-label="Forms">
+        <div className="flex min-h-[62px] items-center justify-between gap-5 border-b border-[var(--line)]">
           <Tabs
             value={activeTab}
             onValueChange={(value) => {
               if (value === "active" || value === "drafts") setActiveTab(value);
             }}
           >
-          <TabsList className="forms-tabs" variant="line" aria-label="Filter forms by status">
+          <TabsList className="h-[62px] gap-[22px] rounded-none bg-transparent p-0 max-[560px]:gap-3" variant="line" aria-label="Filter forms by status">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="forms-tab"
+                className="relative inline-flex h-full flex-[0_0_auto] items-center justify-center gap-2 rounded-none border-0 bg-transparent px-0.5 py-0 text-[.82rem] font-semibold text-ink-soft data-[state=active]:text-ink after:absolute after:right-0 after:bottom-[-1px] after:left-0 after:h-0.5 after:bg-transparent after:content-[''] data-[state=active]:after:bg-[var(--accent)] max-[560px]:gap-[5px] max-[560px]:text-[.74rem]"
               >
                 {tab.label}
-                <span>{counts[tab.id]}</span>
+                <span className="min-w-5 rounded-[10px] bg-[var(--paper-deep)] px-1.5 py-0.5 text-center font-mono text-[.64rem] text-ink-soft">{counts[tab.id]}</span>
               </TabsTrigger>
             ))}
           </TabsList>
           </Tabs>
-          <span className="forms-count">
+          <span className="font-mono text-[.66rem] text-ink-soft uppercase">
             {visibleForms.length} {visibleForms.length === 1 ? "form" : "forms"}
           </span>
         </div>
 
         {visibleForms.length > 0 ? (
-          <div className="forms-grid">
+          <div className="grid grid-cols-3 gap-[14px] pt-5 max-[1100px]:grid-cols-2 max-[560px]:grid-cols-1">
             {visibleForms.map((form) => (
-              <Card className="form-card ring-0" key={form.id}>
-                <div className="form-card-top">
+              <Card className="flex min-h-[232px] min-w-0 flex-col rounded-none border border-[var(--line)] bg-[color-mix(in_srgb,var(--paper-deep)_50%,var(--paper))] px-[18px] pt-[17px] pb-0 ring-0 transition-[border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--accent)_65%,var(--line))]" key={form.id}>
+                <div className="flex items-center justify-between gap-3">
                   <Badge
                     variant={form.status === "published" ? "default" : "secondary"}
-                    className={`form-status is-${form.status}`}
+                    className={`inline-flex h-auto items-center gap-[7px] border-0 rounded-none bg-transparent px-1.5 py-[3px] font-mono text-[.62rem] tracking-[.06em] text-ink-soft uppercase ${form.status === "published" ? "text-[#26734d]" : ""}`}
                   >
-                    <span aria-hidden="true" />
+                    <span className={`size-[7px] rounded-full ${form.status === "published" ? "bg-[#26734d]" : form.status === "draft" ? "bg-[#bd7b22]" : "bg-[var(--ink-soft)]"}`} aria-hidden="true" />
                     {form.status}
                   </Badge>
                 </div>
-                <div className="form-card-copy">
-                  <h2>{form.title}</h2>
-                  <p>{form.description || "No description added yet."}</p>
+                <div className="flex-1 py-[25px] pb-5">
+                  <h2 className="mb-2 overflow-hidden text-ellipsis whitespace-nowrap text-[1.08rem] font-semibold tracking-[-.04em]">{form.title}</h2>
+                  <p className="m-0 line-clamp-2 text-[.78rem] leading-[1.5] text-ink-soft">{form.description || "No description added yet."}</p>
                 </div>
-                <div className="form-card-footer">
+                <div className="flex min-h-[47px] items-center justify-between gap-3 border-t border-[var(--line)] font-mono text-[.62rem] text-ink-soft uppercase">
                   <span>{form.fields.length} questions</span>
-                  <Button asChild variant="link" className="form-card-link">
+                  <Button asChild variant="link" className="h-auto gap-2 p-0 font-sans text-[.72rem] font-semibold text-ink no-underline hover:bg-transparent hover:text-accent-dark hover:no-underline">
                     <Link href={`/form/${form.id}/edit`}>
                       Edit form <span aria-hidden="true">→</span>
                     </Link>
@@ -199,14 +199,14 @@ export function FormsManager({
             ))}
           </div>
         ) : (
-          <div className="forms-empty-state">
-            <span className="forms-empty-icon" aria-hidden="true">
+          <div className="flex min-h-[280px] flex-col items-center justify-center px-5 py-[38px] text-center">
+            <span className="mb-[15px] grid size-11 place-items-center border border-[var(--line)] bg-[var(--paper-deep)] text-[1.3rem] text-accent" aria-hidden="true">
               ▤
             </span>
-            <h2>
+            <h2 className="mb-2 text-[1.1rem] tracking-[-.04em]">
               {activeTab === "drafts" ? "No drafts yet" : "No active forms yet"}
             </h2>
-            <p>
+            <p className="mb-[18px] text-[.83rem] text-ink-soft">
               {activeTab === "drafts"
                 ? "New forms stay as drafts until you publish them."
                 : "Publish a form to make it active in your workspace."}
@@ -214,7 +214,7 @@ export function FormsManager({
             {activeTab === "drafts" && (
               <Button
                 type="button"
-                className="dashboard-primary-button"
+                className="inline-flex min-h-[42px] items-center justify-center gap-[9px] rounded-[3px] border border-[var(--ink)] bg-[var(--ink)] px-[15px] py-[10px] font-sans text-[.8rem] font-semibold text-paper transition-[transform,color,background-color,border-color] duration-150 hover:-translate-y-px hover:border-[var(--accent)] hover:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-55"
                 onClick={() => setModalOpen(true)}
               >
                 Create a form
@@ -225,24 +225,24 @@ export function FormsManager({
       </section>
 
       <DialogContent
-        className="create-form-dialog"
+        className="m-0 max-h-[min(90dvh,760px)] w-[min(calc(100vw-32px),520px)] max-w-none overflow-y-auto rounded-none border border-[var(--line)] bg-[var(--paper)] p-[26px] text-ink max-[560px]:p-[21px]"
         showCloseButton={false}
         onOpenAutoFocus={(event) => {
           event.preventDefault();
           nameInputRef.current?.focus();
         }}
       >
-        <DialogHeader className="create-form-dialog-header">
+        <DialogHeader className="mb-[23px] flex items-start justify-between gap-5">
           <div>
-            <p className="dashboard-eyebrow">New workspace item</p>
-            <DialogTitle id="create-form-title">Create a form</DialogTitle>
+            <p className="mb-0 font-mono text-[.65rem] font-semibold tracking-[.11em] text-ink-soft uppercase">New workspace item</p>
+            <DialogTitle className="mt-2 text-[1.7rem] tracking-[-.06em]" id="create-form-title">Create a form</DialogTitle>
           </div>
           <DialogClose asChild>
             <Button
               type="button"
               variant="outline"
               size="icon"
-              className="dialog-close-button"
+              className="size-[34px] border border-[var(--line)] bg-transparent text-[1.2rem] text-ink-soft hover:bg-[var(--paper-deep)] hover:text-ink"
               aria-label="Close dialog"
               disabled={creating}
             >
@@ -251,12 +251,13 @@ export function FormsManager({
           </DialogClose>
         </DialogHeader>
 
-        <form className="create-form-form" onSubmit={createForm}>
-          <div className="form-dialog-field">
-            <Label htmlFor="create-form-name">
+        <form className="grid gap-[17px]" onSubmit={createForm}>
+          <div className="grid gap-[7px] text-ink-soft">
+            <Label className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase" htmlFor="create-form-name">
               Form name <span aria-hidden="true">*</span>
             </Label>
             <Input
+              className="h-auto min-h-[42px] w-full rounded-[2px] border border-[var(--line)] bg-[var(--paper)] px-3 py-[10px] font-sans text-[.88rem] text-ink tracking-normal"
               id="create-form-name"
               ref={nameInputRef}
               value={formName}
@@ -266,11 +267,12 @@ export function FormsManager({
               required
             />
           </div>
-          <div className="form-dialog-field">
-            <Label htmlFor="create-form-description">
-              Description <span className="form-optional">Optional</span>
+          <div className="grid gap-[7px] text-ink-soft">
+            <Label className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase" htmlFor="create-form-description">
+              Description <span className="ml-1.5 font-mono text-[.6rem] tracking-[.04em] text-ink-soft uppercase">Optional</span>
             </Label>
             <Textarea
+              className="min-h-[88px] w-full resize-y rounded-[2px] border border-[var(--line)] bg-[var(--paper)] px-3 py-[10px] font-sans text-[.88rem] text-ink tracking-normal"
               id="create-form-description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -279,22 +281,22 @@ export function FormsManager({
               placeholder="What is this form for?"
             />
           </div>
-          <div className="draft-note">
-            <span className="draft-note-dot" aria-hidden="true" />
+          <div className="flex items-start gap-[9px] bg-[color-mix(in_srgb,var(--accent)_8%,var(--paper))] px-3 py-[11px] text-[.74rem] leading-[1.45] text-ink-soft">
+            <span className="mt-1 size-[7px] shrink-0 rounded-full bg-[#bd7b22]" aria-hidden="true" />
             This form will be created as a draft. You can publish it from the editor.
           </div>
 
           {error && (
-            <p className="dashboard-alert-message" role="alert">
+            <p className="m-0 text-[.82rem] text-accent-dark" role="alert">
               {error}
             </p>
           )}
 
-          <div className="create-form-actions">
+          <div className="flex justify-end gap-[9px] pt-[5px]">
             <Button
               type="button"
               variant="outline"
-              className="dashboard-secondary-button"
+              className="inline-flex min-h-[42px] items-center justify-center gap-[9px] rounded-[3px] border border-[var(--ink)] bg-transparent px-[15px] py-[10px] font-sans text-[.8rem] font-semibold text-ink transition-colors duration-150 hover:bg-[var(--paper-deep)] disabled:cursor-not-allowed disabled:opacity-55"
               onClick={closeModal}
               disabled={creating}
             >
@@ -302,7 +304,7 @@ export function FormsManager({
             </Button>
             <Button
               type="submit"
-              className="dashboard-primary-button"
+              className="inline-flex min-h-[42px] items-center justify-center gap-[9px] rounded-[3px] border border-[var(--ink)] bg-[var(--ink)] px-[15px] py-[10px] font-sans text-[.8rem] font-semibold text-paper transition-[transform,color,background-color,border-color] duration-150 hover:-translate-y-px hover:border-[var(--accent)] hover:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-55"
               disabled={creating || !formName.trim()}
             >
               {creating ? "Creating…" : "Create draft"}

@@ -77,27 +77,27 @@ export function AuthStatus() {
   };
 
   if (loading) {
-    return <span className="header-auth-status">Loading…</span>;
+    return <span className="font-mono text-[.68rem] tracking-[.06em] text-ink-soft">Loading…</span>;
   }
 
   if (userEmail) {
     return (
-      <div className="header-auth-menu">
+      <div className="flex items-center gap-3">
         {canAccessDashboard && (
-          <Button asChild variant="link" className="header-availability">
+          <Button asChild variant="link" className="h-auto border-0 bg-transparent p-0 font-mono text-[.7rem] tracking-[.04em] text-accent hover:bg-transparent hover:text-accent">
             <Link href="/dashboard">Dashboard</Link>
           </Button>
         )}
         <Button
           type="button"
           variant="outline"
-          className="header-auth-button"
+          className="h-auto border-0 bg-transparent p-0 font-mono text-[.68rem] tracking-[.06em] text-ink-soft hover:bg-transparent hover:text-accent"
           onClick={handleSignOut}
         >
           Sign out
         </Button>
         {accessCheckFailed && (
-          <span className="header-auth-status" role="status">
+          <span className="font-mono text-[.68rem] tracking-[.06em] text-ink-soft" role="status">
             Dashboard access unavailable
           </span>
         )}
@@ -106,7 +106,7 @@ export function AuthStatus() {
   }
 
   return (
-    <Button asChild variant="link" className="header-availability">
+    <Button asChild variant="link" className="h-auto border-0 bg-transparent p-0 font-mono text-[.7rem] tracking-[.04em] text-accent hover:bg-transparent hover:text-accent">
       <Link href="/auth/login">Sign in</Link>
     </Button>
   );

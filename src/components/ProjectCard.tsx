@@ -74,7 +74,7 @@ export default function ProjectCard({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
           >
-            <Button asChild variant="link" className="project-repository-link">
+            <Button asChild variant="link" className="h-auto gap-2 p-0 text-sm font-medium text-ink no-underline hover:bg-transparent hover:text-accent hover:no-underline">
             <Link
               href={project.repository}
               target="_blank"
