@@ -44,11 +44,25 @@ Routes included:
 - `/auth/callback` and `/auth/confirm` for auth redirects
 - `/dashboard` for a protected authenticated page
 
+### Local UI preview without signing in
+
+For local development only, set `DEV_AUTH_BYPASS=true` in `.env.local` and restart
+the development server. The preview is enabled only when `NODE_ENV` is
+`development`; it is always disabled in production.
+
+The dashboard uses demo data at `/dashboard/forms`, with a sample editor at
+`/form/dev-preview/edit` and a sample response page at `/form/dev-preview`.
+Preview changes stay in the current page; creating, saving, and publishing
+forms are disabled. The preview does not read or write Supabase data, and the
+forms API remains protected by normal authentication.
+
 ## Dashboard forms
 
-The admin dashboard includes a forms workspace with draft, active, and past form lists. New forms always start as drafts. Use the form editor to save changes or explicitly publish a form.
+The admin dashboard includes a forms workspace with draft and active forms. New forms always start as drafts. Use the form editor to save changes or explicitly publish a form.
 
-Apply the SQL migration in `supabase/migrations/202611110001_create_forms.sql` to the Supabase project before using the forms workspace. The table uses row-level security so authenticated users can only access their own forms; the app further restricts the workspace to `ADMIN_USER_UID`.
+Apply all SQL migrations in `supabase/migrations` in filename order before using the forms workspace and public response pages. Public forms are available at `/form/<slug>` only while published and accepting responses. Form titles, descriptions, section headings, and question labels support safe GitHub-flavored Markdown; raw HTML is not rendered.
+
+The database policies expose only published form data and validate response inserts. Response records stay private to the form owner, and one-response-per-account forms require sign-in.
 
 ## Learn More
 

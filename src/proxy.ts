@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isAuthorizedDashboardUser } from "@/lib/supabase/admin-config";
+import {
+  isAuthorizedDashboardUser,
+  isDevAuthBypassEnabled,
+} from "@/lib/supabase/admin-config";
 
 function getSupabaseEnv() {
   const url =
@@ -15,13 +18,14 @@ function getSupabaseEnv() {
   return { url, anonKey };
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { url, anonKey } = getSupabaseEnv();
   const pathname = request.nextUrl.pathname;
+  const isFormEditorRoute = /^\/form\/[^/]+\/edit(?:\/|$)/.test(pathname);
   const isProtectedRoute =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/form/");
+    pathname.startsWith("/dashboard") || isFormEditorRoute;
 
-  if (!isProtectedRoute || !url || !anonKey) {
+  if (!isProtectedRoute || isDevAuthBypassEnabled() || !url || !anonKey) {
     return NextResponse.next();
   }
 

@@ -29,9 +29,11 @@ const tabs: { id: FormTab; label: string }[] = [
 export function FormsManager({
   initialForms,
   initialError = "",
+  previewOnly = false,
 }: {
   initialForms: FormRecord[];
   initialError?: string;
+  previewOnly?: boolean;
 }) {
   const router = useRouter();
   const [forms, setForms] = useState(initialForms);
@@ -119,6 +121,7 @@ export function FormsManager({
         </div>
         <Button
           type="button"
+          disabled={previewOnly}
           className="inline-flex min-h-10.5 items-center justify-center gap-2.25 rounded-[3px] border border-(--ink) bg-(--ink) px-3.75 py-2.5 font-sans text-[.8rem] font-semibold text-paper transition-[transform,color,background-color,border-color] duration-150 hover:-translate-y-px hover:border-(--accent) hover:bg-(--accent) disabled:cursor-not-allowed disabled:opacity-55"
           onClick={() => {
             setError("");
@@ -129,6 +132,12 @@ export function FormsManager({
           Create form
         </Button>
       </header>
+
+      {previewOnly && (
+        <p className="mb-5 border-l-2 border-(--accent) bg-(--paper-deep) px-3.5 py-2.5 text-[.78rem] text-ink-soft" role="status">
+          Local preview — demo data only. Form creation and database access are disabled.
+        </p>
+      )}
 
       {initialError && (
         <div className="mb-5 flex items-center justify-between gap-4 border border-[color-mix(in_srgb,var(--accent)_40%,var(--line))] bg-[color-mix(in_srgb,var(--accent)_8%,var(--paper))] px-3.75 py-3.25 text-[.84rem] leading-[1.5] text-accent-dark" role="alert">
@@ -183,17 +192,29 @@ export function FormsManager({
                     {form.status}
                   </Badge>
                 </div>
-                <div className="flex-1 py-6.25 pb-5">
-                  <h2 className="mb-2 overflow-hidden text-ellipsis whitespace-nowrap text-[1.08rem] font-semibold tracking-[-.04em]">{form.title}</h2>
+                <div className="min-w-0 flex-1 py-6.25 pb-5">
+                  <h2 className="mb-2 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[1.08rem] font-semibold tracking-[-.04em]">{form.title}</h2>
                   <p className="m-0 line-clamp-2 text-[.78rem] leading-[1.5] text-ink-soft">{form.description || "No description added yet."}</p>
                 </div>
                 <div className="flex min-h-11.75 items-center justify-between gap-3 border-t border-(--line) font-mono text-[.62rem] text-ink-soft uppercase">
                   <span>{form.fields.length} questions</span>
-                  <Button asChild variant="link" className="h-auto gap-2 p-0 font-sans text-[.72rem] font-semibold text-ink no-underline hover:bg-transparent hover:text-accent-dark hover:no-underline">
-                    <Link href={`/form/${form.id}/edit`}>
-                      Edit form <span aria-hidden="true">→</span>
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    {form.status === "published" &&
+                      form.accepting_responses &&
+                      form.slug && (
+                        <Link
+                          className="font-sans text-[.72rem] font-semibold text-ink-soft hover:text-accent-dark"
+                          href={`/form/${encodeURIComponent(form.slug)}`}
+                        >
+                          View form
+                        </Link>
+                      )}
+                    <Button asChild variant="link" className="h-auto gap-2 p-0 font-sans text-[.72rem] font-semibold text-ink no-underline hover:bg-transparent hover:text-accent-dark hover:no-underline">
+                      <Link href={`/form/${form.id}/edit`}>
+                        Edit <span aria-hidden="true">→</span>
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -214,6 +235,7 @@ export function FormsManager({
             {activeTab === "drafts" && (
               <Button
                 type="button"
+                disabled={previewOnly}
                 className="inline-flex min-h-10.5 items-center justify-center gap-2.25 rounded-[3px] border border-(--ink) bg-(--ink) px-3.75 py-2.5 font-sans text-[.8rem] font-semibold text-paper transition-[transform,color,background-color,border-color] duration-150 hover:-translate-y-px hover:border-(--accent) hover:bg-(--accent) disabled:cursor-not-allowed disabled:opacity-55"
                 onClick={() => setModalOpen(true)}
               >

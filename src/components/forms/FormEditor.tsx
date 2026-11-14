@@ -97,7 +97,13 @@ function withBlocks(form: FormRecord, blocks: FormBlock[]): FormRecord {
   };
 }
 
-export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
+export function FormEditor({
+  initialForm,
+  previewOnly = false,
+}: {
+  initialForm: FormRecord;
+  previewOnly?: boolean;
+}) {
   const router = useRouter();
   const [form, setForm] = useState(initialForm);
   const [settings, setSettings] = useState(
@@ -278,7 +284,13 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-330">
+    <div className="mx-auto w-full max-w-330 max-[800px]:px-4">
+      {previewOnly && (
+        <p className="mb-5 border-l-2 border-(--accent) bg-(--paper-deep) px-3.5 py-2.5 text-[.78rem] text-ink-soft" role="status">
+          Local preview — changes are only kept in this tab. Saving and publishing are disabled.
+        </p>
+      )}
+
       <header className="flex items-end justify-between gap-6 border-b border-(--line) pb-5.75 max-[560px]:items-stretch max-[560px]:flex-col">
         <div>
           <Link href="/dashboard/forms" className="mb-4 inline-flex items-center gap-1.75 text-[.75rem] text-ink-soft hover:text-accent-dark">
@@ -287,7 +299,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
           <div className="mb-2.25 flex flex-wrap items-center gap-3">
             <Input
               aria-label="Form name"
-              className="h-auto min-h-[1.15em] w-[min(55vw,520px)] min-w-55 border-0 border-b border-transparent bg-transparent p-0 font-sans text-[clamp(1.7rem,4vw,2.8rem)] leading-[1.15] font-bold tracking-[-.07em] text-ink focus-visible:border-(--accent) focus-visible:ring-0 max-[560px]:w-full"
+              className="h-auto min-h-[1.15em] w-[min(55vw,520px)] min-w-55 border-0 border-b border-transparent bg-transparent p-0 font-sans text-[clamp(1.7rem,4vw,2.8rem)] leading-[1.15] font-bold tracking-[-.07em] text-ink focus-visible:border-(--accent) focus-visible:ring-0 max-[560px]:w-full max-[560px]:min-w-0 max-[560px]:text-[clamp(1.15rem,6.3vw,2.25rem)]"
               value={form.title}
               onChange={(event) =>
                 setForm((current) => ({ ...current, title: event.target.value }))
@@ -305,11 +317,20 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 max-[560px]:justify-start">
           {notice && <span className="text-[.74rem] text-[#26734d]" role="status">{notice}</span>}
+          {form.status === "published" &&
+            acceptingResponses &&
+            form.slug && (
+              <Button asChild variant="outline">
+                <Link href={`/form/${encodeURIComponent(form.slug)}`}>
+                  View form
+                </Link>
+              </Button>
+            )}
           <Button
             type="button"
             variant="outline"
             onClick={() => void save()}
-            disabled={saving}
+            disabled={saving || previewOnly}
           >
             {saving ? "Saving…" : "Save changes"}
           </Button>
@@ -318,6 +339,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
             variant={form.status === "published" ? "outline" : "default"}
             onClick={togglePublish}
             disabled={
+              previewOnly ||
               saving ||
               !form.title.trim() ||
               (form.status === "draft" && form.fields.length === 0)
@@ -374,7 +396,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
 
                 return (
                   <Card
-                    className={`grid grid-cols-[48px_minmax(0,1fr)] gap-3 border border-(--line) bg-(--paper) p-3.75 transition-[border-color,opacity] duration-150 ${draggedBlockId === block.id ? "border-(--accent) opacity-45" : ""}`}
+                    className={`grid grid-cols-[48px_minmax(0,1fr)] gap-3 border border-(--line) bg-(--paper) p-3.75 transition-[border-color,opacity] duration-150 ${block.type === "section" ? "ml-4 border-l-2 border-l-(--accent) max-[560px]:ml-2" : ""} ${draggedBlockId === block.id ? "border-(--accent) opacity-45" : ""}`}
                     key={block.id}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={(event) => handleBlockDrop(event, block.id)}
@@ -442,7 +464,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
                               Remove
                             </Button>
                           </div>
-                          <div className="grid gap-1.75 text-ink-soft">
+                          <div className="grid min-w-0 gap-1.75 text-ink-soft">
                             <Label
                               className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase"
                               htmlFor={`section-title-${block.id}`}
@@ -469,7 +491,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
                               Description
                             </Label>
                             <Textarea
-                              className="min-h-18 w-full resize-y rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink"
+                              className="field-sizing-fixed min-h-18 w-full min-w-0 resize-y rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink"
                               id={`section-description-${block.id}`}
                               value={block.description}
                               onChange={(event) =>
@@ -526,7 +548,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
                             ) : block.kind === "long_text" ? (
                               <Textarea
                                 disabled
-                                className="min-h-22 w-full resize-y border border-(--line) bg-(--paper-deep) px-3 py-2.5 font-sans text-[.82rem] text-ink-soft"
+                                className="field-sizing-fixed min-h-22 w-full min-w-0 resize-y border border-(--line) bg-(--paper-deep) px-3 py-2.5 font-sans text-[.82rem] text-ink-soft"
                                 placeholder="Long answer"
                                 rows={3}
                               />
@@ -579,15 +601,15 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
           )}
         </section>
 
-        <aside className="row-span-1 grid min-w-0 gap-4.75 border border-(--line) bg-[color-mix(in_srgb,var(--paper-deep)_44%,var(--paper))] p-4.5" aria-labelledby="settings-heading">
+        <aside className="row-span-1 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4.75 border border-(--line) bg-[color-mix(in_srgb,var(--paper-deep)_44%,var(--paper))] p-4.5" aria-labelledby="settings-heading">
           <div className="border-b border-(--line) pb-3.5">
             <p className="mb-0 font-mono text-[.65rem] font-semibold tracking-[.11em] text-ink-soft uppercase">Configuration</p>
             <h2 className="mt-1.5 mb-0 text-[1.2rem] tracking-[-.05em]" id="settings-heading">Form settings</h2>
           </div>
-          <div className="grid gap-1.75 text-ink-soft">
+          <div className="grid min-w-0 gap-1.75 text-ink-soft">
             <Label className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase" htmlFor="form-description">Description</Label>
             <Textarea
-              className="min-h-22 w-full resize-y rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink"
+              className="field-sizing-fixed min-h-22 w-full min-w-0 resize-y rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink"
               id="form-description"
               value={form.description ?? ""}
               onChange={(event) =>
@@ -598,9 +620,9 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
               placeholder="Tell people what this form is about."
             />
           </div>
-          <div className="grid gap-3.25">
+          <div className="grid min-w-0 gap-3.25">
             <p className="mb-0 border-b border-(--line) pb-2 font-mono text-[.62rem] tracking-[.07em] text-ink-soft uppercase">Form experience</p>
-            <div className="grid gap-1.75 text-ink-soft">
+            <div className="grid min-w-0 gap-1.75 text-ink-soft">
               <Label className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase" htmlFor="form-presentation">Presentation</Label>
               <Select
                 value={settings.presentation.mode}
@@ -612,8 +634,8 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
                   })
                 }
               >
-                <SelectTrigger id="form-presentation" className="h-auto min-h-10.5 w-full rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink">
-                  <SelectValue />
+                <SelectTrigger id="form-presentation" className="h-auto min-h-10.5 w-full min-w-0 rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink">
+                  <SelectValue className="min-w-0 flex-1 truncate" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="form">All questions on one page</SelectItem>
@@ -622,9 +644,9 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
               </Select>
             </div>
           </div>
-          <div className="grid gap-3.25">
+          <div className="grid min-w-0 gap-3.25">
             <p className="mb-0 border-b border-(--line) pb-2 font-mono text-[.62rem] tracking-[.07em] text-ink-soft uppercase">Respondents</p>
-            <div className="grid gap-1.75 text-ink-soft">
+            <div className="grid min-w-0 gap-1.75 text-ink-soft">
               <Label className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase" htmlFor="respondent-login">Sign-in access</Label>
               <Select
                 value={settings.respondentAccess.login}
@@ -642,8 +664,8 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
                   })
                 }
               >
-                <SelectTrigger id="respondent-login" className="h-auto min-h-10.5 w-full rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink">
-                  <SelectValue />
+                <SelectTrigger id="respondent-login" className="h-auto min-h-10.5 w-full min-w-0 rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink">
+                  <SelectValue className="min-w-0 flex-1 truncate" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="required">Require login</SelectItem>
@@ -690,7 +712,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
               {form.status === "draft"
                 ? "Only you can see this draft. Publish when it is ready."
                 : acceptingResponses
-                  ? "This form is published. Public submissions are not available yet."
+                  ? "This form is published and accepting responses."
                   : "This form is published but response collection is turned off."}
             </p>
           </div>

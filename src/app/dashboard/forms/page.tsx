@@ -1,9 +1,15 @@
 import { redirect } from "next/navigation";
 import { FormsManager } from "@/components/dashboard/FormsManager";
+import { devPreviewForm } from "@/lib/forms/dev-preview";
 import { toFormRecord } from "@/lib/forms/validation";
+import { isDevAuthBypassEnabled } from "@/lib/supabase/admin-config";
 import { requireAdminContext } from "@/lib/supabase/admin";
 
 export default async function DashboardFormsPage() {
+  if (isDevAuthBypassEnabled()) {
+    return <FormsManager initialForms={[devPreviewForm]} previewOnly />;
+  }
+
   const admin = await requireAdminContext();
 
   if (!admin.ok) {

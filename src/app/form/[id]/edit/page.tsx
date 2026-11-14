@@ -1,12 +1,19 @@
 import { notFound, redirect } from "next/navigation";
 import { FormEditor } from "@/components/forms/FormEditor";
+import { devPreviewForm } from "@/lib/forms/dev-preview";
 import { toFormRecord } from "@/lib/forms/validation";
+import { isDevAuthBypassEnabled } from "@/lib/supabase/admin-config";
 import { requireAdminContext } from "@/lib/supabase/admin";
 
 export default async function EditFormPage({
   params,
 }: PageProps<"/form/[id]/edit">) {
   const { id } = await params;
+  if (isDevAuthBypassEnabled()) {
+    if (id !== devPreviewForm.id) notFound();
+    return <FormEditor initialForm={devPreviewForm} previewOnly />;
+  }
+
   const admin = await requireAdminContext();
 
   if (!admin.ok) {

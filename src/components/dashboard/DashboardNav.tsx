@@ -15,9 +15,11 @@ const navigation = [
 export function DashboardNav({
   children,
   email,
+  previewMode = false,
 }: {
   children: React.ReactNode;
   email: string;
+  previewMode?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -47,7 +49,7 @@ export function DashboardNav({
         </Link>
 
         <div className="px-3 pb-2.5 font-mono text-[.65rem] font-semibold tracking-[.11em] text-ink-soft uppercase max-[800px]:hidden">Workspace</div>
-        <nav className="grid gap-1 max-[800px]:flex max-[800px]:justify-center" aria-label="Dashboard navigation">
+        <nav className="grid gap-1 max-[800px]:flex max-[800px]:justify-center max-[560px]:min-w-0 max-[560px]:flex-wrap" aria-label="Dashboard navigation">
           {navigation.map((item) => {
             const active =
               item.href === "/dashboard"
@@ -84,15 +86,21 @@ export function DashboardNav({
               {signOutError}
             </p>
           )}
-          <Button
-            type="button"
-            variant="outline"
-            className="h-auto justify-self-start border-0 bg-transparent px-0 py-1.25 font-mono text-[.68rem] text-ink-soft uppercase hover:bg-transparent hover:text-accent-dark disabled:cursor-wait disabled:opacity-60 max-[800px]:py-0"
-            onClick={handleSignOut}
-            disabled={signingOut}
-          >
-            {signingOut ? "Signing out…" : "Sign out"}
-          </Button>
+          {previewMode ? (
+            <span className="font-mono text-[.68rem] tracking-[.06em] text-accent-dark uppercase">
+              Local preview
+            </span>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-auto justify-self-start border-0 bg-transparent px-0 py-1.25 font-mono text-[.68rem] text-ink-soft uppercase hover:bg-transparent hover:text-accent-dark disabled:cursor-wait disabled:opacity-60 max-[800px]:py-0"
+              onClick={handleSignOut}
+              disabled={signingOut}
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </Button>
+          )}
         </div>
       </aside>
       <main className="min-w-0 p-[clamp(32px,5vw,68px)] max-[800px]:px-5.5 max-[800px]:py-8 max-[560px]:px-4 max-[560px]:py-6.5">{children}</main>

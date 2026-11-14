@@ -91,6 +91,8 @@ export type Database = {
           answers: Json;
           respondent_name: string | null;
           respondent_email: string | null;
+          respondent_user_id: string | null;
+          one_response_per_account: boolean;
           submitted_at: string;
         };
         Insert: {
@@ -100,6 +102,8 @@ export type Database = {
           answers?: Json;
           respondent_name?: string | null;
           respondent_email?: string | null;
+          respondent_user_id?: string | null;
+          one_response_per_account?: boolean;
           submitted_at?: string;
         };
         Update: {
@@ -109,6 +113,8 @@ export type Database = {
           answers?: Json;
           respondent_name?: string | null;
           respondent_email?: string | null;
+          respondent_user_id?: string | null;
+          one_response_per_account?: boolean;
           submitted_at?: string;
         };
         Relationships: [];

@@ -332,3 +332,77 @@ export function parseFormBlockList(value: unknown): FormBlock[] | null {
 
   return blocks;
 }
+
+export function parseFormResponseAnswers(
+  blocks: FormBlock[],
+  value: unknown,
+): Record<string, string | boolean> | null {
+  if (!isRecord(value)) return null;
+
+  const questions = new Map(
+    blocks.flatMap((block) =>
+      block.type === "question" ? [[block.id, block] as const] : [],
+    ),
+  );
+  const normalized: [string, string | boolean][] = [];
+
+  for (const [id, answer] of Object.entries(value)) {
+    const question = questions.get(id);
+    if (!question) return null;
+
+    if (question.kind === "checkbox") {
+      if (typeof answer !== "boolean" || (question.required && !answer)) {
+        return null;
+      }
+      normalized.push([id, answer]);
+      continue;
+    }
+
+    if (typeof answer !== "string" || answer.includes("\0")) return null;
+    const maxLength =
+      question.kind === "long_text"
+        ? 10000
+        : question.kind === "email"
+          ? 254
+          : 1000;
+    if (
+      answer.length > maxLength ||
+      (question.required && !answer.trim())
+    ) {
+      return null;
+    }
+
+    if (question.kind === "email") {
+      const email = answer.trim();
+      if (
+        email &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ) {
+        return null;
+      }
+      normalized.push([id, email]);
+    } else {
+      normalized.push([id, answer]);
+    }
+  }
+
+  for (const question of questions.values()) {
+    if (question.required && !Object.hasOwn(value, question.id)) {
+      return null;
+    }
+  }
+
+  return Object.fromEntries(normalized);
+}
+
+export function parsePublishedFormDefinition(
+  value: Json,
+): { blocks: FormBlock[]; settings: FormSettings } | null {
+  if (!isObject(value)) return null;
+  const blocks = parseFormBlockList(value.blocks);
+  if (!blocks || !blocks.some((block) => block.type === "question")) {
+    return null;
+  }
+
+  return { blocks, settings: parseFormSettings(value) };
+}
