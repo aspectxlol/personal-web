@@ -38,10 +38,10 @@ function LoginForm() {
   };
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-[linear-gradient(180deg,var(--paper)_0%,color-mix(in_srgb,var(--paper-deep)_55%,var(--paper))_100%)] px-6 py-[72px]">
-      <div className="w-full max-w-[480px]">
-        <div className="flex flex-col gap-4 border border-[var(--line)] bg-[color-mix(in_srgb,var(--paper-deep)_80%,var(--paper))] p-[clamp(28px,5vw,48px)]">
-          <p className="mb-[22px] font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">Protected access</p>
+    <main className="grid min-h-dvh place-items-center bg-[linear-gradient(180deg,var(--paper)_0%,color-mix(in_srgb,var(--paper-deep)_55%,var(--paper))_100%)] px-6 py-18">
+      <div className="w-full max-w-120">
+        <div className="flex flex-col gap-4 border border-(--line) bg-[color-mix(in_srgb,var(--paper-deep)_80%,var(--paper))] p-[clamp(28px,5vw,48px)]">
+          <p className="mb-5.5 font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">Protected access</p>
           <h1 className="m-0 text-[clamp(2.8rem,6vw,4rem)] leading-[.9]">Continue with Google</h1>
           <p className="m-0 leading-[1.6] text-ink-soft">
             Sign in with your Google account to access the dashboard.
@@ -52,7 +52,7 @@ function LoginForm() {
           <div className="mt-2 flex flex-col items-stretch gap-3">
             <Button
               type="button"
-              className="h-auto gap-3 border border-[var(--ink)] bg-[var(--ink)] px-[18px] py-[15px] text-[.86rem] font-bold text-paper transition-[transform,background-color,color] duration-150 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:bg-[var(--accent)] active:translate-y-px active:scale-[.98]"
+              className="h-auto gap-3 border border-(--ink) bg-(--ink) px-4.5 py-3.75 text-[.86rem] font-bold text-paper transition-[transform,background-color,color] duration-150 hover:-translate-y-0.5 hover:border-(--accent) hover:bg-(--accent) active:translate-y-px active:scale-[.98]"
               onClick={handleGoogleSignIn}
               disabled={loading}
             >
@@ -60,8 +60,8 @@ function LoginForm() {
             </Button>
           </div>
 
-          <div className="flex justify-start border-t border-[var(--line)] pt-2">
-            <Link href="/" className="inline-flex items-center gap-3 border-b border-[var(--ink)] pb-[5px] text-[.86rem] font-bold transition-colors hover:text-accent">
+          <div className="flex justify-start border-t border-(--line) pt-2">
+            <Link href="/" className="inline-flex items-center gap-3 border-b border-(--ink) pb-1.25 text-[.86rem] font-bold transition-colors hover:text-accent">
               Back to home
             </Link>
           </div>
@@ -73,7 +73,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<main className="grid min-h-dvh place-items-center bg-[var(--paper)] px-6 py-[72px]" />}>
+    <Suspense fallback={<main className="grid min-h-dvh place-items-center bg-(--paper) px-6 py-18" />}>
       <LoginForm />
     </Suspense>
   );
