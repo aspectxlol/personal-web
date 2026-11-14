@@ -15,6 +15,23 @@ export type FormField = {
   required: boolean;
 };
 
+export type FormQuestionBlock = {
+  id: string;
+  type: "question";
+  label: string;
+  kind: FormFieldType;
+  required: boolean;
+};
+
+export type FormSectionBlock = {
+  id: string;
+  type: "section";
+  title: string;
+  description: string;
+};
+
+export type FormBlock = FormQuestionBlock | FormSectionBlock;
+
 export type FormSettings = {
   presentation: {
     mode: "form" | "slideshow";
@@ -26,15 +43,9 @@ export type FormSettings = {
 };
 
 export type FormDefinition = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   settings: FormSettings;
-  blocks: Array<{
-    id: string;
-    type: "question";
-    label: string;
-    kind: FormFieldType;
-    required: boolean;
-  }>;
+  blocks: FormBlock[];
 };
 
 export type FormRecord = {
@@ -47,6 +58,7 @@ export type FormRecord = {
   draft_definition?: FormDefinition | null;
   published_version_id?: string | null;
   accepting_responses?: boolean | null;
+  blocks: FormBlock[];
   fields: FormField[];
   created_at: string;
   updated_at: string;

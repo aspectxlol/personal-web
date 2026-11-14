@@ -115,7 +115,7 @@ function ProjectCarousel() {
   };
 
   return (
-    <Reveal className="flex h-107.5 flex-col justify-between overflow-hidden border border-(--line) bg-(--paper-deep) p-[clamp(28px,5vw,72px)] max-[767px]:h-115 max-[767px]:p-6" delay={0.1}>
+    <Reveal className="flex h-107.5 flex-col justify-between overflow-hidden border border-(--line) bg-(--paper-deep) p-[clamp(28px,5vw,72px)] max-[767px]:h-auto max-[767px]:min-h-115 max-[767px]:p-6" delay={0.1}>
       <div className="flex items-center justify-between gap-5">
         <p className="mb-5.5 font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">
           {String(activeIndex + 1).padStart(2, "0")} /{" "}
@@ -149,7 +149,7 @@ function ProjectCarousel() {
           </Button>
         </div>
       </div>
-      <div className="grid h-55 flex-[0_0_220px] grid-cols-[minmax(0,1.35fr)_minmax(180px,.65fr)] items-end gap-12 max-[767px]:grid-cols-1 max-[767px]:gap-7.5 max-[767px]:[height:250px] max-[767px]:flex-[0_0_250px]">
+      <div className="grid h-55 flex-[0_0_220px] grid-cols-[minmax(0,1.35fr)_minmax(180px,.65fr)] items-end gap-12 max-[767px]:h-auto max-[767px]:min-h-62.5 max-[767px]:flex-auto max-[767px]:grid-cols-1 max-[767px]:gap-7.5">
         <div>
           <p className="mb-4 font-mono text-[.68rem] tracking-[.08em] text-accent uppercase">{project.status}</p>
           <h3 className="mb-4 text-[clamp(2.5rem,5vw,5.5rem)] leading-[.88]">{project.title}</h3>
@@ -177,11 +177,11 @@ function ProjectCarousel() {
 export default function Page() {
   return (
     <main>
-      <header className="fixed top-0 left-1/2 z-20 flex min-h-19 w-full max-w-none -translate-x-1/2 items-center justify-between gap-6 border-b border-(--line) bg-(--paper) px-[max(24px,calc((100%-1320px)/2))] max-[767px]:min-h-17 max-[767px]:w-[min(100%-32px,1320px)]">
+      <header className="fixed top-0 left-1/2 z-20 flex min-h-19 w-full max-w-none -translate-x-1/2 items-center justify-between gap-6 border-b border-(--line) bg-(--paper) px-[max(24px,calc((100%-1320px)/2))] max-[767px]:min-h-17 max-[767px]:w-full max-[767px]:gap-2 max-[767px]:px-3">
         <Link href="#top" className="text-[1.35rem] font-extrabold tracking-[-.08em]" aria-label="Louie Hansen home">
           LH<span>.</span>
         </Link>
-        <nav aria-label="Main navigation" className="flex gap-7.5 font-mono text-[.7rem] tracking-[.12em] text-ink-soft uppercase max-[767px]:gap-3.5 max-[767px]:text-[.6rem] [&_a]:transition-colors [&_a:hover]:text-accent">
+        <nav aria-label="Main navigation" className="flex gap-7.5 font-mono text-[.7rem] tracking-[.12em] text-ink-soft uppercase max-[767px]:gap-2 max-[767px]:text-[.55rem] [&_a]:transition-colors [&_a:hover]:text-accent">
           <Link href="#work">Work</Link>
           <Link href="#about">About</Link>
           <Link href="#contact">Contact</Link>
@@ -321,7 +321,7 @@ export default function Page() {
       <section id="contact" className="mx-auto flex min-h-dvh w-[min(1320px,calc(100%-48px))] flex-col justify-center border-t border-(--line) py-32.5 pb-38.75 max-[767px]:w-[min(100%-32px,1320px)] max-[767px]:py-22">
         <Reveal>
           <p className="mb-5.5 font-mono text-[.68rem] tracking-[.12em] text-accent uppercase">Have a good problem?</p>
-          <h2 className="mb-12 text-[clamp(4rem,10vw,10.5rem)] leading-[.84] font-semibold tracking-[-.09em] max-[767px]:text-[clamp(4rem,17vw,7rem)]">
+          <h2 className="mb-12 text-[clamp(4rem,10vw,10.5rem)] leading-[.84] font-semibold tracking-[-.09em] max-[767px]:text-[clamp(2.75rem,13vw,6rem)]">
             Let&apos;s build
             <br />
             something <em>useful.</em>

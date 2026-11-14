@@ -5,13 +5,18 @@ import { useRouter } from "next/navigation";
 import { useState, type DragEvent } from "react";
 import {
   FORM_FIELD_TYPES,
+  type FormBlock,
   type FormSettings,
   type FormField,
   type FormFieldType,
+  type FormSectionBlock,
   type FormRecord,
   type FormStatus,
 } from "@/lib/forms/types";
-import { defaultFormSettings } from "@/lib/forms/validation";
+import {
+  defaultFormSettings,
+  getQuestionFields,
+} from "@/lib/forms/validation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -84,6 +89,14 @@ function QuestionTypeMenu({
   );
 }
 
+function withBlocks(form: FormRecord, blocks: FormBlock[]): FormRecord {
+  return {
+    ...form,
+    blocks,
+    fields: getQuestionFields(blocks),
+  };
+}
+
 export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
   const router = useRouter();
   const [form, setForm] = useState(initialForm);
@@ -96,7 +109,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [draggedFieldId, setDraggedFieldId] = useState<string | null>(null);
+  const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
 
   const updateSettings = (patch: FormSettingsPatch) => {
     setSettings((current) => ({
@@ -112,62 +125,101 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
   };
 
   const updateField = (id: string, patch: Partial<FormField>) => {
-    setForm((current) => ({
-      ...current,
-      fields: current.fields.map((field) =>
-        field.id === id ? { ...field, ...patch } : field,
+    setForm((current) =>
+      withBlocks(
+        current,
+        current.blocks.map((block) =>
+          block.type === "question" && block.id === id
+            ? {
+                ...block,
+                label: patch.label ?? block.label,
+                kind: patch.type ?? block.kind,
+                required: patch.required ?? block.required,
+              }
+            : block,
+        ),
       ),
-    }));
+    );
   };
 
   const addField = (type: FormFieldType) => {
-    const field: FormField = {
+    const block: FormBlock = {
       id: crypto.randomUUID(),
+      type: "question",
       label: `Question ${form.fields.length + 1}`,
-      type,
+      kind: type,
       required: false,
     };
-    setForm((current) => ({ ...current, fields: [...current.fields, field] }));
+    setForm((current) => withBlocks(current, [...current.blocks, block]));
     setNotice("");
   };
 
-  const removeField = (id: string) => {
-    setForm((current) => ({
-      ...current,
-      fields: current.fields.filter((field) => field.id !== id),
-    }));
+  const addSection = () => {
+    const sectionCount = form.blocks.filter(
+      (block) => block.type === "section",
+    ).length;
+    const section: FormSectionBlock = {
+      id: crypto.randomUUID(),
+      type: "section",
+      title: `Section ${sectionCount + 1}`,
+      description: "",
+    };
+    setForm((current) => withBlocks(current, [...current.blocks, section]));
     setNotice("");
   };
 
-  const reorderField = (sourceId: string, targetId: string) => {
+  const updateSection = (id: string, patch: Partial<FormSectionBlock>) => {
+    setForm((current) =>
+      withBlocks(
+        current,
+        current.blocks.map((block) =>
+          block.type === "section" && block.id === id
+            ? { ...block, ...patch }
+            : block,
+        ),
+      ),
+    );
+  };
+
+  const removeBlock = (id: string) => {
+    setForm((current) =>
+      withBlocks(
+        current,
+        current.blocks.filter((block) => block.id !== id),
+      ),
+    );
+    setNotice("");
+  };
+
+  const reorderBlock = (sourceId: string, targetId: string) => {
     if (sourceId === targetId) return;
     setForm((current) => {
-      const sourceIndex = current.fields.findIndex((field) => field.id === sourceId);
-      const targetIndex = current.fields.findIndex((field) => field.id === targetId);
+      const sourceIndex = current.blocks.findIndex((block) => block.id === sourceId);
+      const targetIndex = current.blocks.findIndex((block) => block.id === targetId);
       if (sourceIndex < 0 || targetIndex < 0) return current;
 
-      const fields = [...current.fields];
-      const [moved] = fields.splice(sourceIndex, 1);
-      fields.splice(targetIndex, 0, moved);
-      return { ...current, fields };
+      const blocks = [...current.blocks];
+      const [moved] = blocks.splice(sourceIndex, 1);
+      blocks.splice(targetIndex, 0, moved);
+      return withBlocks(current, blocks);
     });
     setNotice("");
   };
 
-  const moveField = (id: string, offset: -1 | 1) => {
-    const index = form.fields.findIndex((field) => field.id === id);
-    const target = form.fields[index + offset];
-    if (target) reorderField(id, target.id);
+  const moveBlock = (id: string, offset: -1 | 1) => {
+    const index = form.blocks.findIndex((block) => block.id === id);
+    const target = form.blocks[index + offset];
+    if (target) reorderBlock(id, target.id);
   };
 
-  const handleFieldDrop = (
+  const handleBlockDrop = (
     event: DragEvent<HTMLElement>,
     targetId: string,
   ) => {
     event.preventDefault();
     const sourceId = event.dataTransfer.getData("text/plain");
-    if (sourceId) reorderField(sourceId, targetId);
-    setDraggedFieldId(null);
+    if (sourceId) reorderBlock(sourceId, targetId);
+    setDraggedBlockId(null);
   };
 
   const save = async (status: FormStatus = form.status) => {
@@ -179,14 +231,14 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
       const updates: {
         title: string;
         description: string;
-        fields: FormField[];
+        blocks: FormBlock[];
         settings: FormSettings;
         accepting_responses: boolean;
         status?: FormStatus;
       } = {
         title: form.title,
         description: form.description ?? "",
-        fields: form.fields,
+        blocks: form.blocks,
         settings,
         accepting_responses: acceptingResponses,
       };
@@ -298,122 +350,220 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
             <div>
               <p className="mb-0 font-mono text-[.65rem] font-semibold tracking-[.11em] text-ink-soft uppercase">Form builder</p>
               <h2 className="mt-1.5 mb-0 text-[1.2rem] tracking-[-.05em]" id="questions-heading">Questions</h2>
+              <p className="mt-1.5 mb-0 text-[.74rem] text-ink-soft">
+                Sections group the questions that follow until the next section.
+              </p>
             </div>
-            <QuestionTypeMenu label="Add question" onSelect={addField} />
+            <div className="flex flex-wrap gap-2">
+              <QuestionTypeMenu label="Add question" onSelect={addField} />
+              <Button type="button" variant="outline" onClick={addSection}>
+                <span aria-hidden="true">+</span>
+                Add section
+              </Button>
+            </div>
           </div>
 
-          {form.fields.length > 0 ? (
+          {form.blocks.length > 0 ? (
             <div className="grid gap-3">
-              {form.fields.map((field, index) => (
-                <Card
-                  className={`grid grid-cols-[48px_minmax(0,1fr)] gap-3 border border-(--line) bg-(--paper) p-3.75 transition-[border-color,opacity] duration-150 ${draggedFieldId === field.id ? "border-(--accent) opacity-45" : ""}`}
-                  key={field.id}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => handleFieldDrop(event, field.id)}
-                >
-                  <div className="flex flex-col items-center gap-1.25">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      className="h-auto cursor-grab border-0 bg-transparent px-1.25 py-0.5 text-base leading-none text-ink-soft hover:bg-transparent active:cursor-grabbing"
-                      draggable
-                      aria-label={`Drag to reorder ${field.label}`}
-                      title="Drag to reorder"
-                      onDragStart={(event) => {
-                        event.dataTransfer.setData("text/plain", field.id);
-                        event.dataTransfer.effectAllowed = "move";
-                        setDraggedFieldId(field.id);
-                      }}
-                      onDragEnd={() => setDraggedFieldId(null)}
-                    >
-                      <span aria-hidden="true">⠿</span>
-                    </Button>
-                    <span className="font-mono text-[.64rem] text-accent">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <div className="grid">
+              {form.blocks.map((block, index) => {
+                const blockLabel =
+                  block.type === "question" ? block.label : block.title;
+                const blockNumber = form.blocks
+                  .slice(0, index + 1)
+                  .filter((entry) => entry.type === block.type).length;
+
+                return (
+                  <Card
+                    className={`grid grid-cols-[48px_minmax(0,1fr)] gap-3 border border-(--line) bg-(--paper) p-3.75 transition-[border-color,opacity] duration-150 ${draggedBlockId === block.id ? "border-(--accent) opacity-45" : ""}`}
+                    key={block.id}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => handleBlockDrop(event, block.id)}
+                  >
+                    <div className="flex flex-col items-center gap-1.25">
                       <Button
                         type="button"
                         variant="ghost"
-                        size="icon-xs"
-                        className="h-5.5 w-6 border-0 bg-transparent text-ink-soft hover:bg-transparent hover:text-accent-dark disabled:cursor-not-allowed disabled:opacity-35"
-                        aria-label={`Move ${field.label} up`}
-                        disabled={index === 0}
-                        onClick={() => moveField(field.id, -1)}
+                        size="icon-sm"
+                        className="h-auto cursor-grab border-0 bg-transparent px-1.25 py-0.5 text-base leading-none text-ink-soft hover:bg-transparent active:cursor-grabbing"
+                        draggable
+                        aria-label={`Drag to reorder ${block.type} ${blockLabel}`}
+                        title="Drag to reorder"
+                        onDragStart={(event) => {
+                          event.dataTransfer.setData("text/plain", block.id);
+                          event.dataTransfer.effectAllowed = "move";
+                          setDraggedBlockId(block.id);
+                        }}
+                        onDragEnd={() => setDraggedBlockId(null)}
                       >
-                        ↑
+                        <span aria-hidden="true">⠿</span>
                       </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        className="h-5.5 w-6 border-0 bg-transparent text-ink-soft hover:bg-transparent hover:text-accent-dark disabled:cursor-not-allowed disabled:opacity-35"
-                        aria-label={`Move ${field.label} down`}
-                        disabled={index === form.fields.length - 1}
-                        onClick={() => moveField(field.id, 1)}
-                      >
-                        ↓
-                      </Button>
+                      <span className="font-mono text-[.64rem] text-accent">
+                        {block.type === "section" ? "S" : ""}
+                        {String(blockNumber).padStart(2, "0")}
+                      </span>
+                      <div className="grid">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          className="h-5.5 w-6 border-0 bg-transparent text-ink-soft hover:bg-transparent hover:text-accent-dark disabled:cursor-not-allowed disabled:opacity-35"
+                          aria-label={`Move ${block.type} ${blockLabel} up`}
+                          disabled={index === 0}
+                          onClick={() => moveBlock(block.id, -1)}
+                        >
+                          ↑
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          className="h-5.5 w-6 border-0 bg-transparent text-ink-soft hover:bg-transparent hover:text-accent-dark disabled:cursor-not-allowed disabled:opacity-35"
+                          aria-label={`Move ${block.type} ${blockLabel} down`}
+                          disabled={index === form.blocks.length - 1}
+                          onClick={() => moveBlock(block.id, 1)}
+                        >
+                          ↓
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="grid gap-3">
-                    <div className="flex items-center justify-between gap-3 font-mono text-[.62rem] tracking-[.05em] text-ink-soft uppercase">
-                      <span>{fieldLabels[field.type]}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto border-0 border-b border-transparent bg-transparent px-0 py-1 text-[.68rem] text-ink-soft normal-case hover:border-(--accent-dark) hover:bg-transparent hover:text-accent-dark"
-                        onClick={() => removeField(field.id)}
-                        aria-label={`Remove ${field.label}`}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                    <div className="grid gap-1.75 text-ink-soft">
-                      <Label className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase" htmlFor={`question-${field.id}`}>Question label</Label>
-                      <Input
-                        className="h-auto min-h-9.5 w-full rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink"
-                        id={`question-${field.id}`}
-                        value={field.label}
-                        onChange={(event) =>
-                          updateField(field.id, { label: event.target.value })
-                        }
-                        maxLength={120}
-                      />
-                    </div>
-                    <div>
-                      {field.type === "checkbox" ? (
-                        <div className="flex items-center gap-2 text-[.82rem] text-ink-soft">
-                          <Checkbox disabled aria-hidden="true" />
-                          {field.label || "Checkbox option"}
-                        </div>
-                      ) : field.type === "long_text" ? (
-                        <Textarea disabled className="min-h-22 w-full resize-y border border-(--line) bg-(--paper-deep) px-3 py-2.5 font-sans text-[.82rem] text-ink-soft" placeholder="Long answer" rows={3} />
+                    <div className="grid gap-3">
+                      {block.type === "section" ? (
+                        <>
+                          <div className="flex items-center justify-between gap-3 font-mono text-[.62rem] tracking-[.05em] text-ink-soft uppercase">
+                            <span>Section heading</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto border-0 border-b border-transparent bg-transparent px-0 py-1 text-[.68rem] text-ink-soft normal-case hover:border-(--accent-dark) hover:bg-transparent hover:text-accent-dark"
+                              onClick={() => removeBlock(block.id)}
+                              aria-label={`Remove section ${block.title}`}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                          <div className="grid gap-1.75 text-ink-soft">
+                            <Label
+                              className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase"
+                              htmlFor={`section-title-${block.id}`}
+                            >
+                              Section title
+                            </Label>
+                            <Input
+                              className="h-auto min-h-9.5 w-full rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink"
+                              id={`section-title-${block.id}`}
+                              value={block.title}
+                              onChange={(event) =>
+                                updateSection(block.id, {
+                                  title: event.target.value,
+                                })
+                              }
+                              maxLength={120}
+                            />
+                          </div>
+                          <div className="grid gap-1.75 text-ink-soft">
+                            <Label
+                              className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase"
+                              htmlFor={`section-description-${block.id}`}
+                            >
+                              Description
+                            </Label>
+                            <Textarea
+                              className="min-h-18 w-full resize-y rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink"
+                              id={`section-description-${block.id}`}
+                              value={block.description}
+                              onChange={(event) =>
+                                updateSection(block.id, {
+                                  description: event.target.value,
+                                })
+                              }
+                              maxLength={2000}
+                              rows={2}
+                              placeholder="Add context for this section (optional)."
+                            />
+                          </div>
+                        </>
                       ) : (
-                        <Input
-                          disabled
-                          className="h-auto min-h-10.5 w-full rounded-[2px] border border-(--line) bg-(--paper-deep) px-3 py-2.5 font-sans text-[.82rem] text-ink-soft"
-                          type={field.type === "email" ? "email" : "text"}
-                          placeholder={field.type === "email" ? "name@example.com" : "Short answer"}
-                        />
+                        <>
+                          <div className="flex items-center justify-between gap-3 font-mono text-[.62rem] tracking-[.05em] text-ink-soft uppercase">
+                            <span>{fieldLabels[block.kind]}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto border-0 border-b border-transparent bg-transparent px-0 py-1 text-[.68rem] text-ink-soft normal-case hover:border-(--accent-dark) hover:bg-transparent hover:text-accent-dark"
+                              onClick={() => removeBlock(block.id)}
+                              aria-label={`Remove ${block.label}`}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                          <div className="grid gap-1.75 text-ink-soft">
+                            <Label
+                              className="font-mono text-[.68rem] font-semibold tracking-[.05em] text-ink-soft uppercase"
+                              htmlFor={`question-${block.id}`}
+                            >
+                              Question label
+                            </Label>
+                            <Input
+                              className="h-auto min-h-9.5 w-full rounded-[2px] border border-(--line) bg-(--paper) px-3 py-2.5 font-sans text-[.88rem] text-ink"
+                              id={`question-${block.id}`}
+                              value={block.label}
+                              onChange={(event) =>
+                                updateField(block.id, {
+                                  label: event.target.value,
+                                })
+                              }
+                              maxLength={120}
+                            />
+                          </div>
+                          <div>
+                            {block.kind === "checkbox" ? (
+                              <div className="flex items-center gap-2 text-[.82rem] text-ink-soft">
+                                <Checkbox disabled aria-hidden="true" />
+                                {block.label || "Checkbox option"}
+                              </div>
+                            ) : block.kind === "long_text" ? (
+                              <Textarea
+                                disabled
+                                className="min-h-22 w-full resize-y border border-(--line) bg-(--paper-deep) px-3 py-2.5 font-sans text-[.82rem] text-ink-soft"
+                                placeholder="Long answer"
+                                rows={3}
+                              />
+                            ) : (
+                              <Input
+                                disabled
+                                className="h-auto min-h-10.5 w-full rounded-[2px] border border-(--line) bg-(--paper-deep) px-3 py-2.5 font-sans text-[.82rem] text-ink-soft"
+                                type={block.kind === "email" ? "email" : "text"}
+                                placeholder={
+                                  block.kind === "email"
+                                    ? "name@example.com"
+                                    : "Short answer"
+                                }
+                              />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-[.75rem] text-ink-soft">
+                            <Checkbox
+                              className="size-4 shrink-0"
+                              id={`required-${block.id}`}
+                              checked={block.required}
+                              onCheckedChange={(checked) =>
+                                updateField(block.id, {
+                                  required: checked === true,
+                                })
+                              }
+                            />
+                            <Label htmlFor={`required-${block.id}`}>
+                              Required question
+                            </Label>
+                          </div>
+                        </>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-[.75rem] text-ink-soft">
-                      <Checkbox
-                        className="size-4 shrink-0"
-                        id={`required-${field.id}`}
-                        checked={field.required}
-                        onCheckedChange={(checked) =>
-                          updateField(field.id, { required: checked === true })
-                        }
-                      />
-                      <Label htmlFor={`required-${field.id}`}>Required question</Label>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="flex min-h-62.5 flex-col items-center justify-center border border-dashed border-(--line) p-6 text-center">
@@ -429,7 +579,7 @@ export function FormEditor({ initialForm }: { initialForm: FormRecord }) {
           )}
         </section>
 
-        <aside className="row-span-1 grid min-w-0 gap-4.75 border border-(--line) bg-[color-mix(in_srgb,var(--paper-deep)_44%,var(--paper))] p-4.5 max-[800px]:row-start-1" aria-labelledby="settings-heading">
+        <aside className="row-span-1 grid min-w-0 gap-4.75 border border-(--line) bg-[color-mix(in_srgb,var(--paper-deep)_44%,var(--paper))] p-4.5" aria-labelledby="settings-heading">
           <div className="border-b border-(--line) pb-3.5">
             <p className="mb-0 font-mono text-[.65rem] font-semibold tracking-[.11em] text-ink-soft uppercase">Configuration</p>
             <h2 className="mt-1.5 mb-0 text-[1.2rem] tracking-[-.05em]" id="settings-heading">Form settings</h2>

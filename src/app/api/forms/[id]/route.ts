@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import {
   buildDraftDefinition,
+  parseFormBlockList,
   parseFormFieldList,
   parseDraftDefinition,
   parseFormSettings,
   parseFormSettingsInput,
+  questionBlocksFromFields,
   toFormRecord,
 } from "@/lib/forms/validation";
-import type { FormField, FormSettings } from "@/lib/forms/types";
+import type { FormBlock, FormSettings } from "@/lib/forms/types";
 import type { Database } from "@/lib/supabase/database.types";
 import { requireAdminContext } from "@/lib/supabase/admin";
 
@@ -69,7 +71,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const updates: Database["public"]["Tables"]["forms"]["Update"] = {
     updated_at: new Date().toISOString(),
   };
-  let submittedFields: FormField[] | null = null;
+  let submittedBlocks: FormBlock[] | null = null;
   let submittedSettings: FormSettings | null = null;
   let publishedDefinition: ReturnType<typeof buildDraftDefinition> | null = null;
   let hasUpdate = false;
@@ -107,20 +109,34 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     hasUpdate = true;
   }
 
-  if ("fields" in input) {
-    const fields = parseFormFieldList(input.fields);
-    if (!fields) {
-      return NextResponse.json({ error: "One or more form fields are invalid." }, { status: 400 });
+  if ("blocks" in input && "fields" in input) {
+    return NextResponse.json(
+      { error: "Send form blocks or legacy fields, not both." },
+      { status: 400 }
+    );
+  }
+
+  if ("blocks" in input || "fields" in input) {
+    if ("blocks" in input) {
+      submittedBlocks = parseFormBlockList(input.blocks);
+      if (!submittedBlocks) {
+        return NextResponse.json({ error: "One or more form blocks are invalid." }, { status: 400 });
+      }
+    } else {
+      const fields = parseFormFieldList(input.fields);
+      if (!fields) {
+        return NextResponse.json({ error: "One or more form fields are invalid." }, { status: 400 });
+      }
+      submittedBlocks = questionBlocksFromFields(fields);
     }
-    submittedFields = fields;
-    updates.draft_definition = buildDraftDefinition(fields);
+    updates.draft_definition = buildDraftDefinition(submittedBlocks);
     hasUpdate = true;
   }
 
-  if ("fields" in input || "settings" in input) {
-    let fields = submittedFields;
+  if ("blocks" in input || "fields" in input || "settings" in input) {
+    let blocks = submittedBlocks;
     let settings = submittedSettings;
-    if (!fields || !settings) {
+    if (!blocks || !settings) {
       const { data, error } = await admin.supabase
         .from("forms")
         .select("draft_definition")
@@ -132,14 +148,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       if (!data) {
         return NextResponse.json({ error: "Form not found." }, { status: 404 });
       }
-      fields ??= parseDraftDefinition(data.draft_definition);
+      blocks ??= parseDraftDefinition(data.draft_definition);
       settings ??= parseFormSettings(data.draft_definition);
     }
     if (settings.respondentAccess.oneResponsePerAccount) {
       settings.respondentAccess.login = "required";
     }
-    updates.draft_definition = buildDraftDefinition(fields, settings);
-    submittedFields = fields;
+    updates.draft_definition = buildDraftDefinition(blocks, settings);
+    submittedBlocks = blocks;
     submittedSettings = settings;
   }
 
@@ -151,9 +167,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     hasUpdate = true;
 
     if (input.status === "published") {
-      let fields = submittedFields;
+      let blocks = submittedBlocks;
       let settings = submittedSettings;
-      if (!fields || !settings) {
+      if (!blocks || !settings) {
         const { data, error } = await admin.supabase
           .from("forms")
           .select("draft_definition")
@@ -165,17 +181,17 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         if (!data) {
           return NextResponse.json({ error: "Form not found." }, { status: 404 });
         }
-        fields ??= parseDraftDefinition(data.draft_definition);
+        blocks ??= parseDraftDefinition(data.draft_definition);
         settings ??= parseFormSettings(data.draft_definition);
       }
 
-      if (fields.length === 0) {
+      if (!blocks.some((block) => block.type === "question")) {
         return NextResponse.json(
           { error: "Add at least one question before publishing this form." },
           { status: 400 }
         );
       }
-      publishedDefinition = buildDraftDefinition(fields, settings);
+      publishedDefinition = buildDraftDefinition(blocks, settings);
     }
   }
 

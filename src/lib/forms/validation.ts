@@ -1,8 +1,10 @@
 import {
   FORM_FIELD_TYPES,
+  type FormBlock,
   type FormDefinition,
   type FormField,
   type FormFieldType,
+  type FormQuestionBlock,
   type FormRecord,
   type FormSettings,
 } from "./types";
@@ -23,7 +25,7 @@ export const defaultFormSettings: FormSettings = {
 };
 
 export const defaultFormDefinition: FormDefinition = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: defaultFormSettings,
   blocks: [],
 };
@@ -120,52 +122,89 @@ export function parseFormFields(value: Json): FormField[] {
   });
 }
 
-export function parseDraftDefinition(value: Json | null | undefined): FormField[] {
+export function parseDraftDefinition(value: Json | null | undefined): FormBlock[] {
   if (!value || !isObject(value)) return [];
 
   const blocks = Array.isArray(value.blocks) ? value.blocks : [];
-  return blocks.flatMap((block) => {
-    if (!isObject(block) || block.type !== "question") return [];
+  return blocks.flatMap((block): FormBlock[] => {
+    if (!isObject(block)) return [];
 
     const id = typeof block.id === "string" ? block.id : crypto.randomUUID();
-    const label = typeof block.label === "string" ? block.label : "Question";
-    const kind = typeof block.kind === "string" && FORM_FIELD_TYPES.includes(block.kind as FormFieldType)
-      ? (block.kind as FormFieldType)
-      : "short_text";
-    const required = typeof block.required === "boolean" ? block.required : false;
+    if (block.type === "section") {
+      return [{
+        id,
+        type: "section" as const,
+        title: typeof block.title === "string" ? block.title : "Section",
+        description:
+          typeof block.description === "string" ? block.description : "",
+      }];
+    }
 
-    return [{ id, label, type: kind, required }];
+    if (block.type !== "question") return [];
+
+    const label = typeof block.label === "string" ? block.label : "Question";
+    const kind =
+      typeof block.kind === "string" &&
+      FORM_FIELD_TYPES.includes(block.kind as FormFieldType)
+        ? (block.kind as FormFieldType)
+        : "short_text";
+    const required =
+      typeof block.required === "boolean" ? block.required : false;
+
+    return [{ id, type: "question" as const, label, kind, required }];
   });
 }
 
 export function buildDraftDefinition(
-  fields: FormField[],
+  blocks: FormBlock[],
   settings: FormSettings = defaultFormSettings,
 ): FormDefinition {
   return {
     ...defaultFormDefinition,
     settings,
-    blocks: fields.map((field) => ({
-      id: field.id,
-      type: "question",
-      label: field.label,
-      kind: field.type,
-      required: field.required,
-    })),
+    blocks,
   };
 }
 
-type FormRecordRow = Partial<Omit<FormRecord, "fields" | "draft_definition">> & {
+export function getQuestionFields(blocks: FormBlock[]): FormField[] {
+  return blocks.flatMap((block) =>
+    block.type === "question"
+      ? [{
+          id: block.id,
+          label: block.label,
+          type: block.kind,
+          required: block.required,
+        }]
+      : [],
+  );
+}
+
+export function questionBlocksFromFields(fields: FormField[]): FormQuestionBlock[] {
+  return fields.map((field) => ({
+    id: field.id,
+    type: "question",
+    label: field.label,
+    kind: field.type,
+    required: field.required,
+  }));
+}
+
+type FormRecordRow = Partial<Omit<FormRecord, "blocks" | "fields" | "draft_definition">> & {
   fields?: Json;
   draft_definition?: Json | null;
 };
 
 export function toFormRecord(row: FormRecordRow): FormRecord {
-  const fields = Array.isArray(row.fields)
-    ? parseFormFields(row.fields)
-    : parseDraftDefinition(row.draft_definition ?? null);
-  const draftDefinition = row.draft_definition
-    ? buildDraftDefinition(fields, parseFormSettings(row.draft_definition))
+  const blocks =
+    row.draft_definition !== null && row.draft_definition !== undefined
+      ? parseDraftDefinition(row.draft_definition)
+      : Array.isArray(row.fields)
+        ? questionBlocksFromFields(parseFormFields(row.fields))
+        : [];
+  const fields = getQuestionFields(blocks);
+  const draftDefinition =
+    row.draft_definition !== null && row.draft_definition !== undefined
+      ? buildDraftDefinition(blocks, parseFormSettings(row.draft_definition))
     : null;
 
   return {
@@ -178,6 +217,7 @@ export function toFormRecord(row: FormRecordRow): FormRecord {
     draft_definition: draftDefinition,
     published_version_id: row.published_version_id ?? null,
     accepting_responses: row.accepting_responses ?? true,
+    blocks,
     fields,
     created_at: row.created_at ?? new Date().toISOString(),
     updated_at: row.updated_at ?? new Date().toISOString(),
@@ -221,4 +261,74 @@ export function parseFormFieldList(value: unknown): FormField[] | null {
   }
 
   return fields;
+}
+
+export function parseFormBlockList(value: unknown): FormBlock[] | null {
+  if (!Array.isArray(value) || value.length > 200) return null;
+
+  const blocks: FormBlock[] = [];
+  const ids = new Set<string>();
+  let questionCount = 0;
+
+  for (const entry of value) {
+    if (!isRecord(entry)) return null;
+    if (
+      typeof entry.id !== "string" ||
+      entry.id.length < 1 ||
+      entry.id.length > 80 ||
+      ids.has(entry.id)
+    ) {
+      return null;
+    }
+
+    if (entry.type === "question") {
+      questionCount += 1;
+      if (
+        questionCount > 100 ||
+        typeof entry.label !== "string" ||
+        entry.label.trim().length < 1 ||
+        entry.label.length > 120 ||
+        typeof entry.kind !== "string" ||
+        !FORM_FIELD_TYPES.includes(entry.kind as FormFieldType) ||
+        typeof entry.required !== "boolean"
+      ) {
+        return null;
+      }
+
+      blocks.push({
+        id: entry.id,
+        type: "question",
+        label: entry.label.trim(),
+        kind: entry.kind as FormFieldType,
+        required: entry.required,
+      });
+    } else if (entry.type === "section") {
+      if (
+        typeof entry.title !== "string" ||
+        entry.title.trim().length < 1 ||
+        entry.title.length > 120 ||
+        (entry.description !== undefined &&
+          (typeof entry.description !== "string" ||
+            entry.description.length > 2000))
+      ) {
+        return null;
+      }
+
+      blocks.push({
+        id: entry.id,
+        type: "section",
+        title: entry.title.trim(),
+        description:
+          typeof entry.description === "string"
+            ? entry.description.trim()
+            : "",
+      });
+    } else {
+      return null;
+    }
+
+    ids.add(entry.id);
+  }
+
+  return blocks;
 }
