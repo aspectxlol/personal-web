@@ -16,18 +16,21 @@ type FormSectionBlock = Extract<FormBlock, { type: "section" }>;
 
 type SlideshowPage = {
   section: FormSectionBlock | null;
-  question: FormQuestionBlock;
+  questions: FormQuestionBlock[];
 };
 
 function getSlideshowPages(blocks: FormBlock[]): SlideshowPage[] {
-  let section: FormSectionBlock | null = null;
   const pages: SlideshowPage[] = [];
+  let sectionPage: SlideshowPage | null = null;
 
   for (const block of blocks) {
     if (block.type === "section") {
-      section = block;
+      sectionPage = { section: block, questions: [] };
+      pages.push(sectionPage);
+    } else if (sectionPage) {
+      sectionPage.questions.push(block);
     } else {
-      pages.push({ section, question: block });
+      pages.push({ section: null, questions: [block] });
     }
   }
 
@@ -82,17 +85,17 @@ export function FormResponder({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const isSlideshow = settings.presentation.mode === "slideshow";
   const slideshowPages = getSlideshowPages(blocks);
-  const currentSlideshowPage = slideshowPages[currentQuestionIndex];
+  const currentSlideshowPage = slideshowPages[currentPageIndex];
   const visibleBlocks =
     isSlideshow && currentSlideshowPage
       ? [
           ...(currentSlideshowPage.section
             ? [currentSlideshowPage.section]
             : []),
-          currentSlideshowPage.question,
+          ...currentSlideshowPage.questions,
         ]
       : blocks;
 
@@ -107,17 +110,20 @@ export function FormResponder({
   };
 
   const handleNext = () => {
-    const question = currentSlideshowPage?.question;
-    if (!question) return;
-
-    const questionError = getQuestionError(question, answers[question.id]);
-    if (questionError) {
+    const invalidQuestion = currentSlideshowPage?.questions.find((question) =>
+      getQuestionError(question, answers[question.id]),
+    );
+    if (invalidQuestion) {
+      const questionError = getQuestionError(
+        invalidQuestion,
+        answers[invalidQuestion.id],
+      );
       setError(questionError);
       return;
     }
 
     setError("");
-    setCurrentQuestionIndex((current) =>
+    setCurrentPageIndex((current) =>
       Math.min(current + 1, slideshowPages.length - 1),
     );
   };
@@ -128,7 +134,7 @@ export function FormResponder({
 
     if (
       isSlideshow &&
-      currentQuestionIndex < slideshowPages.length - 1
+      currentPageIndex < slideshowPages.length - 1
     ) {
       handleNext();
       return;
@@ -254,14 +260,14 @@ export function FormResponder({
               className="m-0 font-mono text-[.68rem] tracking-[.08em] text-ink-soft uppercase"
               aria-live="polite"
             >
-              Question {currentQuestionIndex + 1} of {slideshowPages.length}
+              Page {currentPageIndex + 1} of {slideshowPages.length}
             </p>
           )}
 
-          {visibleBlocks.map((block) =>
+          {visibleBlocks.map((block, index) =>
             block.type === "section" ? (
               <section
-                className="ml-3 border-l-2 border-(--accent) bg-(--paper-deep) px-4 py-3.5 max-[560px]:ml-1.5 max-[560px]:px-3"
+                className="border-l-2 border-(--accent) bg-(--paper-deep) px-4 py-3.5 max-[560px]:px-3"
                 key={block.id}
                 aria-labelledby={`public-section-${block.id}`}
               >
@@ -280,7 +286,7 @@ export function FormResponder({
               </section>
             ) : (
               <div
-                className="grid min-w-0 gap-2.5 border border-(--line) bg-(--paper-deep) p-4.5 max-[560px]:p-3.5"
+                className={`grid min-w-0 gap-2.5 border border-(--line) bg-(--paper-deep) p-4.5 max-[560px]:p-3.5 ${visibleBlocks.slice(0, index).some((entry) => entry.type === "section") ? "ml-4 max-[560px]:ml-2" : ""}`}
                 key={block.id}
               >
                 {block.kind === "checkbox" ? (
@@ -368,7 +374,7 @@ export function FormResponder({
           )}
 
           <div className="flex justify-between gap-3">
-            {isSlideshow && currentQuestionIndex > 0 ? (
+            {isSlideshow && currentPageIndex > 0 ? (
               <Button
                 type="button"
                 variant="outline"
@@ -376,7 +382,7 @@ export function FormResponder({
                 disabled={submitting}
                 onClick={() => {
                   setError("");
-                  setCurrentQuestionIndex((current) => Math.max(current - 1, 0));
+                  setCurrentPageIndex((current) => Math.max(current - 1, 0));
                 }}
               >
                 Previous
@@ -384,14 +390,14 @@ export function FormResponder({
             ) : (
               <span />
             )}
-            {isSlideshow && currentQuestionIndex < slideshowPages.length - 1 ? (
+            {isSlideshow && currentPageIndex < slideshowPages.length - 1 ? (
               <Button
                 type="button"
                 className="min-h-10.5 rounded-[3px] border border-(--ink) bg-(--ink) px-4 py-2.5 font-sans text-[.82rem] font-semibold text-paper hover:border-(--accent) hover:bg-(--accent)"
                 disabled={submitting}
                 onClick={handleNext}
               >
-                Next question
+                Next page
               </Button>
             ) : (
               <Button

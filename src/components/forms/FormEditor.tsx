@@ -390,13 +390,18 @@ export function FormEditor({
               {form.blocks.map((block, index) => {
                 const blockLabel =
                   block.type === "question" ? block.label : block.title;
+                const isSectionChild =
+                  block.type === "question" &&
+                  form.blocks
+                    .slice(0, index)
+                    .some((entry) => entry.type === "section");
                 const blockNumber = form.blocks
                   .slice(0, index + 1)
                   .filter((entry) => entry.type === block.type).length;
 
                 return (
                   <Card
-                    className={`grid grid-cols-[48px_minmax(0,1fr)] gap-3 border border-(--line) bg-(--paper) p-3.75 transition-[border-color,opacity] duration-150 ${block.type === "section" ? "ml-4 border-l-2 border-l-(--accent) max-[560px]:ml-2" : ""} ${draggedBlockId === block.id ? "border-(--accent) opacity-45" : ""}`}
+                    className={`grid grid-cols-[48px_minmax(0,1fr)] gap-3 border border-(--line) bg-(--paper) p-3.75 transition-[border-color,opacity] duration-150 ${block.type === "section" ? "border-l-2 border-l-(--accent)" : isSectionChild ? "ml-4 max-[560px]:ml-2" : ""} ${draggedBlockId === block.id ? "border-(--accent) opacity-45" : ""}`}
                     key={block.id}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={(event) => handleBlockDrop(event, block.id)}
@@ -639,7 +644,7 @@ export function FormEditor({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="form">All questions on one page</SelectItem>
-                  <SelectItem value="slideshow">One question at a time</SelectItem>
+                  <SelectItem value="slideshow">One section per page</SelectItem>
                 </SelectContent>
               </Select>
             </div>
