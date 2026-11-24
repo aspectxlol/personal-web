@@ -64,6 +64,14 @@ Apply all SQL migrations in `supabase/migrations` in filename order before using
 
 The database policies expose only published form data and validate response inserts. Response records stay private to the form owner, and one-response-per-account forms require sign-in.
 
+### Tests
+
+Run the forms validation tests with:
+
+```bash
+pnpm test
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
